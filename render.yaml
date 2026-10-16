@@ -2,6 +2,7 @@ services:
   - type: web
     name: velocista-backend
     runtime: docker
+    plan: free
     dockerfilePath: ./Dockerfile
     numInstances: 1
     healthCheckPath: /api/health
@@ -30,5 +31,6 @@ services:
         generateValue: true
 databases:
   - name: velocista-db
+    plan: free
     databaseName: velocista
     user: velocista
