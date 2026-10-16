@@ -1,0 +1,6 @@
+from typing import Protocol
+
+
+class RulesRepository(Protocol):
+    def list_profiles(self) -> list[dict]: ...
+    def get_profile(self, profile_id: str) -> dict | None: ...

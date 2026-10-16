@@ -1,0 +1,972 @@
+{
+  "component_type": [
+    {
+      "id": "bat",
+      "name": "Battery",
+      "color": "#3DDC97",
+      "fields": [
+        {
+          "key": "cells",
+          "label": "Celdas",
+          "type": "number",
+          "unit": "S",
+          "required": false
+        },
+        {
+          "key": "capacity_mah",
+          "label": "Capacidad",
+          "type": "number",
+          "unit": "mAh",
+          "required": false
+        },
+        {
+          "key": "discharge_c",
+          "label": "Descarga",
+          "type": "number",
+          "unit": "C",
+          "required": false
+        },
+        {
+          "key": "max_voltage_v",
+          "label": "Voltaje a carga completa",
+          "type": "number",
+          "unit": "V",
+          "required": false
+        }
+      ],
+      "capabilities": [
+        {
+          "key": "battery_v",
+          "unit": "V",
+          "aggregation": "per_component",
+          "field": "max_voltage_v"
+        }
+      ]
+    },
+    {
+      "id": "chasis",
+      "name": "Chassis",
+      "color": "#A2A7B8",
+      "fields": [
+        {
+          "key": "width_mm",
+          "label": "Ancho",
+          "type": "number",
+          "unit": "mm",
+          "required": false
+        },
+        {
+          "key": "length_mm",
+          "label": "Largo",
+          "type": "number",
+          "unit": "mm",
+          "required": false
+        },
+        {
+          "key": "material",
+          "label": "Material",
+          "type": "text",
+          "unit": "",
+          "required": false
+        }
+      ],
+      "capabilities": []
+    },
+    {
+      "id": "driver",
+      "name": "Motor driver",
+      "color": "#FFCB57",
+      "fields": [
+        {
+          "key": "channels",
+          "label": "Canales",
+          "type": "number",
+          "unit": "",
+          "required": false
+        },
+        {
+          "key": "continuous_current_a",
+          "label": "Corriente continua",
+          "type": "number",
+          "unit": "A",
+          "required": false
+        },
+        {
+          "key": "peak_current_a",
+          "label": "Corriente pico",
+          "type": "number",
+          "unit": "A",
+          "required": false
+        },
+        {
+          "key": "min_voltage_v",
+          "label": "Voltaje mínimo",
+          "type": "number",
+          "unit": "V",
+          "required": false
+        },
+        {
+          "key": "max_voltage_v",
+          "label": "Voltaje máximo",
+          "type": "number",
+          "unit": "V",
+          "required": false
+        }
+      ],
+      "capabilities": []
+    },
+    {
+      "id": "enc",
+      "name": "Encoder",
+      "color": "#6CB6FF",
+      "fields": [
+        {
+          "key": "counts_per_revolution",
+          "label": "Pulsos por vuelta (CPR)",
+          "type": "number",
+          "unit": "pulsos/vuelta",
+          "required": false
+        },
+        {
+          "key": "type",
+          "label": "Tipo",
+          "type": "text",
+          "unit": "",
+          "required": false
+        }
+      ],
+      "capabilities": [
+        {
+          "key": "pulses_per_revolution",
+          "unit": "pulsos/vuelta",
+          "aggregation": "per_component",
+          "field": "counts_per_revolution"
+        }
+      ]
+    },
+    {
+      "id": "exp",
+      "name": "Expansion board",
+      "color": "#A2A7B8",
+      "fields": [
+        {
+          "key": "terminals",
+          "label": "Bornes",
+          "type": "number",
+          "unit": "",
+          "required": false
+        },
+        {
+          "key": "commercial_pcb",
+          "label": "PCB comercial",
+          "type": "text",
+          "unit": "",
+          "required": false
+        }
+      ],
+      "capabilities": []
+    },
+    {
+      "id": "imu",
+      "name": "IMU",
+      "color": "#6CB6FF",
+      "fields": [
+        {
+          "key": "axes",
+          "label": "Ejes",
+          "type": "number",
+          "unit": "",
+          "required": false
+        },
+        {
+          "key": "bus",
+          "label": "Bus",
+          "type": "text",
+          "unit": "",
+          "required": false
+        }
+      ],
+      "capabilities": [
+        {
+          "key": "axes",
+          "unit": "ejes",
+          "aggregation": "per_component",
+          "field": "axes"
+        }
+      ]
+    },
+    {
+      "id": "linea",
+      "name": "Line sensor",
+      "color": "#3DDC97",
+      "fields": [
+        {
+          "key": "channels",
+          "label": "Canales",
+          "type": "number",
+          "unit": "",
+          "required": false
+        },
+        {
+          "key": "output",
+          "label": "Salida",
+          "type": "text",
+          "unit": "",
+          "required": false
+        },
+        {
+          "key": "pitch_mm",
+          "label": "Paso",
+          "type": "number",
+          "unit": "mm",
+          "required": false
+        },
+        {
+          "key": "current_a",
+          "label": "Consumo",
+          "type": "number",
+          "unit": "A",
+          "required": false
+        }
+      ],
+      "capabilities": [
+        {
+          "key": "line_channels",
+          "unit": "canales",
+          "aggregation": "sum_by_quantity",
+          "field": "channels"
+        }
+      ]
+    },
+    {
+      "id": "mcu",
+      "name": "Microcontroller",
+      "color": "#FF5A78",
+      "fields": [
+        {
+          "key": "clock_mhz",
+          "label": "Frecuencia",
+          "type": "number",
+          "unit": "MHz",
+          "required": false
+        },
+        {
+          "key": "radio",
+          "label": "Radio",
+          "type": "text",
+          "unit": "",
+          "required": false
+        },
+        {
+          "key": "logic_voltage_v",
+          "label": "Lógica",
+          "type": "number",
+          "unit": "V",
+          "required": false
+        },
+        {
+          "key": "analog_inputs",
+          "label": "Entradas analógicas usables",
+          "type": "number",
+          "unit": "",
+          "required": false
+        }
+      ],
+      "capabilities": [
+        {
+          "key": "radio",
+          "unit": "",
+          "aggregation": "per_component",
+          "field": "radio"
+        }
+      ]
+    },
+    {
+      "id": "motor",
+      "name": "Motor",
+      "color": "#B48CFF",
+      "fields": [
+        {
+          "key": "voltage_v",
+          "label": "Voltaje nominal",
+          "type": "number",
+          "unit": "V",
+          "required": false
+        },
+        {
+          "key": "no_load_rpm",
+          "label": "RPM sin carga",
+          "type": "number",
+          "unit": "rpm",
+          "required": false
+        },
+        {
+          "key": "nominal_current_a",
+          "label": "Corriente nominal",
+          "type": "number",
+          "unit": "A",
+          "required": false
+        },
+        {
+          "key": "peak_current_a",
+          "label": "Corriente de arranque",
+          "type": "number",
+          "unit": "A",
+          "required": false
+        },
+        {
+          "key": "gear_ratio",
+          "label": "Reducción",
+          "type": "text",
+          "unit": "",
+          "required": false
+        },
+        {
+          "key": "family",
+          "label": "Familia",
+          "type": "text",
+          "unit": "",
+          "required": false
+        }
+      ],
+      "capabilities": [
+        {
+          "key": "pwm_pct",
+          "unit": "%",
+          "aggregation": "per_component",
+          "min": -100,
+          "max": 100
+        }
+      ]
+    },
+    {
+      "id": "mux",
+      "name": "Multiplexer",
+      "color": "#6CB6FF",
+      "fields": [
+        {
+          "key": "channels",
+          "label": "Canales",
+          "type": "number",
+          "unit": "",
+          "required": false
+        },
+        {
+          "key": "type",
+          "label": "Tipo",
+          "type": "text",
+          "unit": "",
+          "required": false
+        }
+      ],
+      "capabilities": []
+    },
+    {
+      "id": "reg",
+      "name": "Voltage regulator",
+      "color": "#A2A7B8",
+      "fields": [
+        {
+          "key": "output_voltage_v",
+          "label": "Salida",
+          "type": "number",
+          "unit": "V",
+          "required": false
+        },
+        {
+          "key": "max_current_a",
+          "label": "Corriente máxima",
+          "type": "number",
+          "unit": "A",
+          "required": false
+        },
+        {
+          "key": "type",
+          "label": "Tipo",
+          "type": "text",
+          "unit": "",
+          "required": false
+        }
+      ],
+      "capabilities": []
+    },
+    {
+      "id": "rueda",
+      "name": "Wheel",
+      "color": "#A2A7B8",
+      "fields": [
+        {
+          "key": "diameter_mm",
+          "label": "Diámetro",
+          "type": "number",
+          "unit": "mm",
+          "required": false
+        },
+        {
+          "key": "material",
+          "label": "Material",
+          "type": "text",
+          "unit": "",
+          "required": false
+        }
+      ],
+      "capabilities": []
+    },
+    {
+      "id": "sw",
+      "name": "Switch",
+      "color": "#5E6374",
+      "fields": [
+        {
+          "key": "type",
+          "label": "Tipo",
+          "type": "text",
+          "unit": "",
+          "required": false
+        }
+      ],
+      "capabilities": []
+    },
+    {
+      "id": "turb",
+      "name": "Turbine",
+      "color": "#FF2D55",
+      "fields": [
+        {
+          "key": "diameter_mm",
+          "label": "Diámetro",
+          "type": "number",
+          "unit": "mm",
+          "required": false
+        },
+        {
+          "key": "voltage_v",
+          "label": "Voltaje",
+          "type": "number",
+          "unit": "V",
+          "required": false
+        },
+        {
+          "key": "max_current_a",
+          "label": "Corriente",
+          "type": "number",
+          "unit": "A",
+          "required": false
+        }
+      ],
+      "capabilities": [
+        {
+          "key": "max_electrical_power_w",
+          "unit": "W",
+          "aggregation": "sum_by_quantity",
+          "fields": [
+            "voltage_v",
+            "max_current_a"
+          ],
+          "operation": "product"
+        },
+        {
+          "key": "control_power_pct",
+          "unit": "%",
+          "aggregation": "per_component",
+          "min": 0,
+          "max": 100
+        }
+      ]
+    }
+  ],
+  "slot": [
+    {
+      "id": "bat",
+      "type_id": "bat",
+      "name": "Battery",
+      "required": true,
+      "quantity_editable": false,
+      "rules_dependent": false
+    },
+    {
+      "id": "chasis",
+      "type_id": "chasis",
+      "name": "Chassis",
+      "required": true,
+      "quantity_editable": false,
+      "rules_dependent": false
+    },
+    {
+      "id": "driver",
+      "type_id": "driver",
+      "name": "Motor driver",
+      "required": true,
+      "quantity_editable": false,
+      "rules_dependent": false
+    },
+    {
+      "id": "enc",
+      "type_id": "enc",
+      "name": "Encoder",
+      "required": false,
+      "quantity_editable": false,
+      "rules_dependent": true
+    },
+    {
+      "id": "exp",
+      "type_id": "exp",
+      "name": "Expansion board",
+      "required": false,
+      "quantity_editable": false,
+      "rules_dependent": false
+    },
+    {
+      "id": "imu",
+      "type_id": "imu",
+      "name": "IMU",
+      "required": false,
+      "quantity_editable": false,
+      "rules_dependent": true
+    },
+    {
+      "id": "linea",
+      "type_id": "linea",
+      "name": "Line sensor",
+      "required": true,
+      "quantity_editable": true,
+      "rules_dependent": false
+    },
+    {
+      "id": "mcu",
+      "type_id": "mcu",
+      "name": "Microcontroller",
+      "required": true,
+      "quantity_editable": false,
+      "rules_dependent": false
+    },
+    {
+      "id": "motor",
+      "type_id": "motor",
+      "name": "Motor",
+      "required": true,
+      "quantity_editable": true,
+      "rules_dependent": false
+    },
+    {
+      "id": "mux",
+      "type_id": "mux",
+      "name": "Multiplexer",
+      "required": false,
+      "quantity_editable": false,
+      "rules_dependent": false
+    },
+    {
+      "id": "reg",
+      "type_id": "reg",
+      "name": "Voltage regulator",
+      "required": true,
+      "quantity_editable": false,
+      "rules_dependent": false
+    },
+    {
+      "id": "rueda",
+      "type_id": "rueda",
+      "name": "Wheel",
+      "required": false,
+      "quantity_editable": false,
+      "rules_dependent": false
+    },
+    {
+      "id": "sw",
+      "type_id": "sw",
+      "name": "Switch",
+      "required": false,
+      "quantity_editable": false,
+      "rules_dependent": false
+    },
+    {
+      "id": "turb",
+      "type_id": "turb",
+      "name": "Turbine",
+      "required": false,
+      "quantity_editable": false,
+      "rules_dependent": true
+    }
+  ],
+  "controller": [
+    {
+      "id": "adapt",
+      "name": "PID adaptativo",
+      "short_name": "Adaptativo",
+      "description": "PID con velocidad base variable: frena según el error (Kv) sin bajar de Vmín. Rápido en rectas, prudente en curvas.",
+      "parameters": [
+        {
+          "key": "kp",
+          "label": "Kp",
+          "min": 0,
+          "max": 2,
+          "step": 0.01,
+          "decimals": 2,
+          "description": "Proporcional",
+          "optimizable": true
+        },
+        {
+          "key": "ki",
+          "label": "Ki",
+          "min": 0,
+          "max": 0.3,
+          "step": 0.005,
+          "decimals": 3,
+          "description": "Integral",
+          "optimizable": false
+        },
+        {
+          "key": "kd",
+          "label": "Kd",
+          "min": 0,
+          "max": 10,
+          "step": 0.1,
+          "decimals": 1,
+          "description": "Derivativo",
+          "optimizable": true
+        },
+        {
+          "key": "base",
+          "label": "Base",
+          "min": 10,
+          "max": 100,
+          "step": 1,
+          "decimals": 0,
+          "description": "Velocidad base (%)",
+          "optimizable": false
+        },
+        {
+          "key": "max",
+          "label": "Máx",
+          "min": 20,
+          "max": 100,
+          "step": 1,
+          "decimals": 0,
+          "description": "PWM máximo (%)",
+          "optimizable": false
+        },
+        {
+          "key": "kv",
+          "label": "Kv",
+          "min": 0,
+          "max": 1,
+          "step": 0.05,
+          "decimals": 2,
+          "description": "Frenado: cuánto baja la velocidad con el error",
+          "optimizable": true
+        },
+        {
+          "key": "vmin",
+          "label": "Vmín",
+          "min": 10,
+          "max": 60,
+          "step": 1,
+          "decimals": 0,
+          "description": "Velocidad mínima en curva (%)",
+          "optimizable": false
+        }
+      ],
+      "presets": {
+        "Base": {
+          "kd": 2.8,
+          "ki": 0,
+          "kp": 0.6,
+          "kv": 0.55,
+          "max": 86,
+          "base": 65,
+          "vmin": 32
+        },
+        "Seguro": {
+          "kd": 3,
+          "ki": 0,
+          "kp": 0.5,
+          "kv": 0.5,
+          "max": 86,
+          "base": 55,
+          "vmin": 30
+        },
+        "Agresivo": {
+          "kd": 3.5,
+          "ki": 0,
+          "kp": 0.75,
+          "kv": 0.6,
+          "max": 86,
+          "base": 78,
+          "vmin": 35
+        }
+      }
+    },
+    {
+      "id": "fuzzy",
+      "name": "Difuso",
+      "short_name": "Difuso",
+      "description": "Reglas difusas: corrige suave con error chico y fuerte con error grande. Para comparar contra el PID en el informe.",
+      "parameters": [
+        {
+          "key": "g",
+          "label": "G",
+          "min": 0,
+          "max": 2,
+          "step": 0.01,
+          "decimals": 2,
+          "description": "Ganancia de las reglas difusas",
+          "optimizable": true
+        },
+        {
+          "key": "d",
+          "label": "D",
+          "min": 0,
+          "max": 10,
+          "step": 0.1,
+          "decimals": 1,
+          "description": "Amortiguamiento (derivativo)",
+          "optimizable": true
+        },
+        {
+          "key": "base",
+          "label": "Base",
+          "min": 10,
+          "max": 100,
+          "step": 1,
+          "decimals": 0,
+          "description": "Velocidad base (%)",
+          "optimizable": false
+        },
+        {
+          "key": "max",
+          "label": "Máx",
+          "min": 20,
+          "max": 100,
+          "step": 1,
+          "decimals": 0,
+          "description": "PWM máximo (%)",
+          "optimizable": false
+        }
+      ],
+      "presets": {
+        "Base": {
+          "d": 2.6,
+          "g": 0.65,
+          "max": 86,
+          "base": 50
+        },
+        "Seguro": {
+          "d": 3,
+          "g": 0.5,
+          "max": 86,
+          "base": 42
+        },
+        "Agresivo": {
+          "d": 3.6,
+          "g": 0.85,
+          "max": 86,
+          "base": 60
+        }
+      }
+    },
+    {
+      "id": "pid",
+      "name": "PID",
+      "short_name": "PID",
+      "description": "Clásico. Con Ki = 0 funciona como PD, lo más usado en velocistas.",
+      "parameters": [
+        {
+          "key": "kp",
+          "label": "Kp",
+          "min": 0,
+          "max": 2,
+          "step": 0.01,
+          "decimals": 2,
+          "description": "Proporcional",
+          "optimizable": true
+        },
+        {
+          "key": "ki",
+          "label": "Ki",
+          "min": 0,
+          "max": 0.3,
+          "step": 0.005,
+          "decimals": 3,
+          "description": "Integral",
+          "optimizable": false
+        },
+        {
+          "key": "kd",
+          "label": "Kd",
+          "min": 0,
+          "max": 10,
+          "step": 0.1,
+          "decimals": 1,
+          "description": "Derivativo",
+          "optimizable": true
+        },
+        {
+          "key": "base",
+          "label": "Base",
+          "min": 10,
+          "max": 100,
+          "step": 1,
+          "decimals": 0,
+          "description": "Velocidad base (%)",
+          "optimizable": false
+        },
+        {
+          "key": "max",
+          "label": "Máx",
+          "min": 20,
+          "max": 100,
+          "step": 1,
+          "decimals": 0,
+          "description": "PWM máximo (%)",
+          "optimizable": false
+        }
+      ],
+      "presets": {
+        "Base": {
+          "kd": 2.5,
+          "ki": 0,
+          "kp": 0.6,
+          "max": 86,
+          "base": 45
+        },
+        "Seguro": {
+          "kd": 3.5,
+          "ki": 0,
+          "kp": 0.45,
+          "max": 80,
+          "base": 38
+        },
+        "Agresivo": {
+          "kd": 4,
+          "ki": 0,
+          "kp": 0.8,
+          "max": 86,
+          "base": 62
+        }
+      }
+    }
+  ],
+  "profile": [
+    {
+      "id": "club",
+      "competition": "Pruebas del club",
+      "label": "Club",
+      "category": "Libre",
+      "rules": {
+        "dimensions_mm": null,
+        "encoders": true,
+        "imu": true,
+        "allowed_mcus": null,
+        "mr4": false,
+        "wireless_start": false,
+        "chassis": "Libre",
+        "wheels": null,
+        "drivers": null,
+        "speed_map": true,
+        "mounting": "Libre",
+        "motors": null,
+        "max_sensors": null,
+        "turbine": true,
+        "start_mode": "Libre",
+        "motor_families": null,
+        "commercial_pcb": true
+      }
+    },
+    {
+      "id": "mr4a",
+      "competition": "Muchik Rumble 4",
+      "label": "MR4",
+      "category": "Amateur",
+      "rules": {
+        "dimensions_mm": [
+          200,
+          250
+        ],
+        "encoders": false,
+        "imu": false,
+        "allowed_mcus": [
+          "Arduino UNO",
+          "Arduino Nano",
+          "Raspberry Pi Pico",
+          "ESP32"
+        ],
+        "mr4": true,
+        "wireless_start": false,
+        "chassis": "Obligatorio: impresión 3D o MDF",
+        "wheels": 2,
+        "drivers": 1,
+        "speed_map": false,
+        "mounting": "Protoboard, cableado directo, shield genérico o PCB propia",
+        "motors": 2,
+        "max_sensors": 8,
+        "turbine": false,
+        "start_mode": "Interruptor, pulsador, IR o Bluetooth",
+        "motor_families": [
+          "TT amarillo"
+        ],
+        "chassis_materials": [
+          "3D",
+          "MDF"
+        ],
+        "commercial_pcb": false
+      }
+    },
+    {
+      "id": "mr4m",
+      "competition": "Muchik Rumble 4",
+      "label": "MR4",
+      "category": "Master",
+      "rules": {
+        "dimensions_mm": [
+          300,
+          300
+        ],
+        "encoders": false,
+        "imu": false,
+        "allowed_mcus": null,
+        "mr4": true,
+        "wireless_start": true,
+        "chassis": "Libre",
+        "wheels": null,
+        "drivers": null,
+        "speed_map": false,
+        "mounting": "Libre (se admiten robots comerciales)",
+        "motors": null,
+        "max_sensors": null,
+        "turbine": true,
+        "start_mode": "Inalámbrico",
+        "motor_families": null,
+        "commercial_pcb": true
+      }
+    },
+    {
+      "id": "mr4s",
+      "competition": "Muchik Rumble 4",
+      "label": "MR4",
+      "category": "Senior",
+      "rules": {
+        "dimensions_mm": [
+          200,
+          250
+        ],
+        "encoders": false,
+        "imu": false,
+        "allowed_mcus": null,
+        "mr4": true,
+        "wireless_start": true,
+        "chassis": "Libre",
+        "wheels": 2,
+        "drivers": null,
+        "speed_map": false,
+        "mounting": "Libre",
+        "motors": 2,
+        "max_sensors": null,
+        "turbine": false,
+        "start_mode": "Inalámbrico",
+        "motor_families": null,
+        "commercial_pcb": true
+      }
+    }
+  ]
+}
