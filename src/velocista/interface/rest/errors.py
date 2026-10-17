@@ -8,6 +8,8 @@ Mapea el TIPO de error de dominio a un código HTTP (el dominio no conoce HTTP).
 """
 
 import logging
+from collections.abc import Iterable
+from typing import Any
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -64,6 +66,23 @@ class BusinessError(BaseModel):
         }
     )
     detail: ErrorDetail
+
+
+def error_responses(
+    errors: dict[int, str], plain: Iterable[int] = ()
+) -> dict[int | str, dict[str, Any]]:
+    """Documents error responses in Swagger.
+
+    Business errors use the standard `BusinessError` body. Status codes listed in `plain`
+    come from `HTTPException`/middleware with a different body, so only a description is shown.
+    """
+    skip = set(plain)
+    return {
+        code: (
+            {"description": text} if code in skip else {"model": BusinessError, "description": text}
+        )
+        for code, text in errors.items()
+    }
 
 
 def _response(status: int, reason: str, detail: str) -> JSONResponse:

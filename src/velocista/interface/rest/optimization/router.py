@@ -10,6 +10,7 @@ from velocista.infrastructure.persistence.db import get_session
 from velocista.infrastructure.persistence.repositories.optimization_repository import (
     SqlAlchemyOptimizationRepository,
 )
+from velocista.interface.rest.errors import error_responses
 
 
 class SetupCreate(BaseModel):
@@ -48,12 +49,31 @@ SetupId = Annotated[int, Path(ge=1, le=9007199254740991)]
 router = APIRouter(prefix="/api", tags=["optimization"])
 
 
-@router.get("/controllers", operation_id="listControllers")
+@router.get(
+    "/controllers",
+    operation_id="listControllers",
+    summary="List controllers",
+    description=(
+        "Returns the controller catalog (for example PID) with each parameter's "
+        "key, range and the named presets."
+    ),
+)
 def list_controllers(service: Service):
     return service.list_controllers()
 
 
-@router.get("/robots/{robot_id}/setups", response_model=SetupsPage, operation_id="listSetups")
+@router.get(
+    "/robots/{robot_id}/setups",
+    response_model=SetupsPage,
+    operation_id="listSetups",
+    summary="List the setups of a robot",
+    description=(
+        "A setup is a saved set of controller parameters for one robot version. "
+        "Archived setups are hidden. Paginated with `limit` (1-200, default 50) "
+        "and `offset` (default 0). Optional filter `version_id`."
+    ),
+    responses=error_responses({404: "Robot does not exist (`robot_not_found`)"}),
+)
 def list_setups(
     robot_id: RobotId,
     service: Service,
@@ -69,17 +89,50 @@ def list_setups(
     status_code=201,
     response_model=SetupOut,
     operation_id="createSetup",
+    summary="Save a setup",
+    description=(
+        "Stores a controller and its parameters for a version of the robot. "
+        "Parameters must match the controller definition exactly and stay inside "
+        "each allowed range."
+    ),
+    responses=error_responses(
+        {
+            404: (
+                "Version does not belong to the robot (`version_not_found`) or controller "
+                "does not exist (`controller_not_found`)"
+            ),
+            422: (
+                "Parameters missing, extra or out of range (`invalid_parameters`, `out_of_range`)"
+            ),
+        }
+    ),
 )
 def create_setup(robot_id: RobotId, data: SetupCreate, service: Service):
     return service.create_setup(robot_id, data.model_dump())
 
 
-@router.get("/setups/{setup_id}", response_model=SetupOut, operation_id="getSetup")
+@router.get(
+    "/setups/{setup_id}",
+    response_model=SetupOut,
+    operation_id="getSetup",
+    summary="Get a setup",
+    description="Returns one setup, including archived ones.",
+    responses=error_responses({404: "Setup does not exist (`setup_not_found`)"}),
+)
 def get_setup(setup_id: SetupId, service: Service):
     return service.get_setup(setup_id)
 
 
-@router.delete("/setups/{setup_id}", status_code=204, operation_id="archiveSetup")
+@router.delete(
+    "/setups/{setup_id}",
+    status_code=204,
+    operation_id="archiveSetup",
+    summary="Archive a setup",
+    description=(
+        "Soft delete. Runs already recorded keep the parameters they used. Returns no body."
+    ),
+    responses=error_responses({404: "Setup does not exist (`setup_not_found`)"}),
+)
 def archive_setup(setup_id: SetupId, service: Service):
     service.archive_setup(setup_id)
     return Response(status_code=204)
@@ -99,7 +152,17 @@ def selected_manifest(robot_id):
     return manifest if manifest and manifest.id == robot_id else None
 
 
-@router.get("/robots/{robot_id}/controllers", operation_id="listReconciledControllers")
+@router.get(
+    "/robots/{robot_id}/controllers",
+    operation_id="listReconciledControllers",
+    summary="List controllers with live values",
+    description=(
+        "Like `GET /api/controllers`, but each parameter also carries the `value` "
+        "currently loaded in the connected robot and the active controller is "
+        "flagged. When the robot is not connected, values are null and no "
+        "controller is active."
+    ),
+)
 def reconciled_controllers(robot_id: RobotId, service: Service):
     manifest = selected_manifest(robot_id)
     controllers = []
@@ -122,7 +185,18 @@ def reconciled_controllers(robot_id: RobotId, service: Service):
     }
 
 
-@router.get("/robots/{robot_id}/configuration", operation_id="getRobotControllerConfig")
+@router.get(
+    "/robots/{robot_id}/configuration",
+    operation_id="getRobotControllerConfig",
+    summary="Get the configuration loaded in the robot",
+    description=(
+        "Returns the active controller and its parameter values exactly as the "
+        "robot reported them in its manifest."
+    ),
+    responses=error_responses(
+        {404: "The selected robot has not sent its manifest (`no_manifest`)"}
+    ),
+)
 def live_configuration(robot_id: RobotId):
     from velocista.domain.shared.errors import NotFound
 
@@ -140,7 +214,26 @@ def live_configuration(robot_id: RobotId):
 
 
 @router.post(
-    "/robots/{robot_id}/setups/{setup_id}/apply", status_code=202, operation_id="applySetup"
+    "/robots/{robot_id}/setups/{setup_id}/apply",
+    status_code=202,
+    operation_id="applySetup",
+    summary="Send a saved setup to the robot",
+    description=(
+        "Asynchronous: the command is queued (HTTP 202) and the robot confirms "
+        "through the console WebSocket with an `ack` message carrying the "
+        "returned `seq`. Competition mode locks the setup while the robot is "
+        "running."
+    ),
+    responses=error_responses(
+        {
+            404: "Setup does not exist or belongs to another robot",
+            409: (
+                "Setup is archived (`setup_archived`), robot not connected "
+                "(`no_manifest`), busy, not calibrated or locked by competition mode"
+            ),
+            503: "Robot disconnected while sending (`device_unavailable`)",
+        }
+    ),
 )
 async def apply_setup(robot_id: RobotId, setup_id: SetupId, service: Service):
     from velocista.domain.shared.errors import Conflict, NotFound
@@ -164,7 +257,23 @@ async def apply_setup(robot_id: RobotId, setup_id: SetupId, service: Service):
     return {"seq": seq, "message": "Sent; acknowledgement arrives through the console WebSocket"}
 
 
-@router.post("/robots/{robot_id}/presets/apply", status_code=202, operation_id="applyPreset")
+@router.post(
+    "/robots/{robot_id}/presets/apply",
+    status_code=202,
+    operation_id="applyPreset",
+    summary="Send a controller preset to the robot",
+    description=(
+        "Same as applying a setup, but uses one of the named presets declared by "
+        "the controller (for example `Base`)."
+    ),
+    responses=error_responses(
+        {
+            404: "Controller does not exist (`controller_not_found`)",
+            409: "Robot not connected (`no_manifest`), busy or locked",
+            422: "Controller does not declare that preset (`preset_not_found`)",
+        }
+    ),
+)
 async def apply_preset(robot_id: RobotId, data: PresetApply, service: Service):
     from velocista.domain.optimization.validation import validate_parameters
     from velocista.domain.shared.errors import NotFound, Validation
