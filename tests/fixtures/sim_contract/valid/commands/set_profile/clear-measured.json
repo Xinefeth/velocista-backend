@@ -1,0 +1,10 @@
+{
+  "description": "set_profile con null borra el valor medido: vuelve a usarse el default.",
+  "message": {
+    "cmd": "set_profile",
+    "measured": {
+      "wheelbase_m": null,
+      "adc_white": 185
+    }
+  }
+}

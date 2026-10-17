@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://velocista-sim.local/contract/v1/commands/list.schema.json",
+  "title": "list",
+  "description": "Pide el catálogo de robots y pistas; se responde con catalog (FR-026, FR-029).",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "../common.schema.json#/$defs/command_envelope"
+    }
+  ],
+  "properties": {
+    "cmd": {
+      "const": "list"
+    }
+  }
+}

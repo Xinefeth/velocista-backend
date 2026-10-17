@@ -1,0 +1,13 @@
+{
+  "description": "track debe ser un objeto track v1.",
+  "message": {
+    "cmd": "load_track",
+    "track": "oval-01"
+  },
+  "expected": [
+    {
+      "rule": "type",
+      "path": "/track"
+    }
+  ]
+}

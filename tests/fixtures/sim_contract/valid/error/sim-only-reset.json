@@ -1,0 +1,11 @@
+{
+  "description": "error que el robot real responde a un comando solo-sim; nada cambia (escenario US3-4).",
+  "message": {
+    "type": "error",
+    "v": 1,
+    "t_ms": 2210,
+    "code": "sim_only",
+    "cmd": "reset",
+    "message": "reset no aplica al robot real"
+  }
+}

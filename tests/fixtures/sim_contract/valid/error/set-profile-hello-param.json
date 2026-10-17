@@ -1,0 +1,11 @@
+{
+  "description": "error con que el simulador rechaza set_profile de un parámetro de hello; el perfil no cambia (escenario US3-5).",
+  "message": {
+    "type": "error",
+    "v": 1,
+    "t_ms": 8120,
+    "code": "invalid_params",
+    "cmd": "set_profile",
+    "message": "line_sensors aparece en hello y solo puede cambiarse con load"
+  }
+}

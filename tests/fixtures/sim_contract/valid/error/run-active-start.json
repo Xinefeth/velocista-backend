@@ -1,0 +1,11 @@
+{
+  "description": "error que responde a start con una corrida activa; la corrida sigue sin cambios (FR-031).",
+  "message": {
+    "type": "error",
+    "v": 1,
+    "t_ms": 29010,
+    "code": "run_active",
+    "cmd": "start",
+    "message": "ya hay una corrida activa (r-0004)"
+  }
+}

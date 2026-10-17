@@ -1,0 +1,23 @@
+{
+  "description": "rate_hz debe ser entero.",
+  "message": {
+    "type": "config",
+    "v": 1,
+    "t_ms": 120,
+    "controller": "pid",
+    "params": {
+      "kp": 0.045,
+      "ki": 0,
+      "kd": 0.9
+    },
+    "base_speed": 180,
+    "rate_hz": 50.5,
+    "track_id": "oval-01"
+  },
+  "expected": [
+    {
+      "rule": "type",
+      "path": "/rate_hz"
+    }
+  ]
+}

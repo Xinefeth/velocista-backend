@@ -1,0 +1,135 @@
+{
+  "description": "Todo parámetro debe traer default, measured y source.",
+  "message": {
+    "id": {
+      "default": "velocista-01",
+      "measured": null,
+      "source": "defined"
+    },
+    "firmware": {
+      "default": "sim-0.1",
+      "measured": null,
+      "source": "defined"
+    },
+    "hw_rev": {
+      "default": "A",
+      "measured": null,
+      "source": "defined"
+    },
+    "line_sensors": {
+      "default": 16,
+      "measured": null,
+      "source": "current_robot"
+    },
+    "adc_bits": {
+      "default": 12,
+      "measured": null,
+      "source": "current_robot"
+    },
+    "sensor_pitch_m": {
+      "default": 0.009525,
+      "measured": null,
+      "source": "datasheet"
+    },
+    "sensor_offset_m": {
+      "default": 0.085,
+      "measured": null,
+      "source": "estimated"
+    },
+    "adc_white": {
+      "default": 200,
+      "measured": null,
+      "source": "estimated"
+    },
+    "adc_black": {
+      "default": 3900,
+      "measured": null,
+      "source": "estimated"
+    },
+    "adc_noise": {
+      "default": 60,
+      "measured": null,
+      "source": "estimated"
+    },
+    "motors": {
+      "default": 2,
+      "measured": null,
+      "source": "current_robot"
+    },
+    "max_speed_mps": {
+      "default": 2.8,
+      "measured": null,
+      "source": "estimated"
+    },
+    "motor_tau_ms": {
+      "default": 45,
+      "measured": null,
+      "source": "estimated"
+    },
+    "wheelbase_m": {
+      "default": 0.13,
+      "source": "estimated"
+    },
+    "max_lateral_accel_mps2": {
+      "default": 9.0,
+      "measured": null,
+      "source": "estimated"
+    },
+    "turbine": {
+      "default": false,
+      "measured": null,
+      "source": "current_robot"
+    },
+    "turbine_suction_n": {
+      "default": null,
+      "measured": null,
+      "source": "current_robot"
+    },
+    "encoders": {
+      "default": false,
+      "measured": null,
+      "source": "current_robot"
+    },
+    "encoder_ticks_per_rev": {
+      "default": null,
+      "measured": null,
+      "source": "current_robot"
+    },
+    "imu": {
+      "default": false,
+      "measured": null,
+      "source": "current_robot"
+    },
+    "battery_cells": {
+      "default": 2,
+      "measured": null,
+      "source": "estimated"
+    },
+    "battery_nominal_v": {
+      "default": 7.4,
+      "measured": null,
+      "source": "estimated"
+    },
+    "battery_voltage_sense": {
+      "default": true,
+      "measured": null,
+      "source": "estimated"
+    },
+    "lap_timing": {
+      "default": true,
+      "measured": null,
+      "source": "defined"
+    },
+    "control_period_ms": {
+      "default": 2,
+      "measured": null,
+      "source": "estimated"
+    }
+  },
+  "expected": [
+    {
+      "rule": "required",
+      "path": "/wheelbase_m/measured"
+    }
+  ]
+}

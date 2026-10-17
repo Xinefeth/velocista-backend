@@ -1,0 +1,13 @@
+{
+  "description": "PDF v1.1: set_config con los tres campos.",
+  "message": {
+    "cmd": "set_config",
+    "controller": "pid",
+    "params": {
+      "kp": 0.045,
+      "ki": 0,
+      "kd": 0.9
+    },
+    "base_speed": 180
+  }
+}

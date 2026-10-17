@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://velocista-sim.local/contract/v1/track.schema.json",
+  "title": "Pista track v1",
+  "description": "Geometría de la pista que exporta el trazador; solo la recibe el mundo simulado (FR-038 a FR-040). Coordenadas en m, origen en la esquina inferior izquierda del tablero.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "v": {
+      "description": "Versión del formato de pista: 1.",
+      "const": 1
+    },
+    "name": {
+      "type": "string"
+    },
+    "units": {
+      "const": "m"
+    },
+    "board": {
+      "description": "Tablero [0, width] × [0, height], m.",
+      "type": "object",
+      "properties": {
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "width",
+        "height"
+      ]
+    },
+    "line_width": {
+      "description": "Ancho de la línea, m.",
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "closed": {
+      "type": "boolean"
+    },
+    "centerline": {
+      "description": "Puntos [x, y] en m, cada 0,005 m ± 10 %.",
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "minItems": 2,
+        "maxItems": 2
+      }
+    },
+    "gaps": {
+      "description": "Cortes de la línea; at y length en m a lo largo de centerline.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "at": {
+            "type": "number",
+            "minimum": 0
+          },
+          "length": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "required": [
+          "at",
+          "length"
+        ]
+      }
+    },
+    "start": {
+      "description": "Línea de salida; at en m a lo largo de centerline.",
+      "type": "object",
+      "properties": {
+        "at": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "at"
+      ]
+    },
+    "rules_profile": {
+      "description": "Perfil de reglamento del trazador.",
+      "type": "string",
+      "minLength": 1
+    },
+    "marks": {
+      "description": "Reservado para una versión posterior; sin efecto en v1 (FR-040)."
+    }
+  },
+  "required": [
+    "id",
+    "v",
+    "name",
+    "units",
+    "board",
+    "line_width",
+    "closed",
+    "centerline",
+    "gaps",
+    "start",
+    "rules_profile"
+  ]
+}

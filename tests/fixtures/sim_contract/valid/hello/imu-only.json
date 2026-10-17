@@ -1,0 +1,29 @@
+{
+  "description": "hello del robot real con IMU y sin encoders: odometry trae solo heading_rad.",
+  "message": {
+    "type": "hello",
+    "v": 1,
+    "t_ms": 0,
+    "session_id": "s-0001",
+    "source": "robot",
+    "robot": {
+      "id": "velocista-01",
+      "firmware": "esp32-0.1",
+      "hw_rev": "A"
+    },
+    "capabilities": {
+      "line_sensors": 16,
+      "adc_bits": 12,
+      "motors": 2,
+      "turbine": false,
+      "encoders": false,
+      "imu": true,
+      "lap_timing": false,
+      "battery": {
+        "cells": 2,
+        "nominal_v": 7.4,
+        "voltage_sense": false
+      }
+    }
+  }
+}

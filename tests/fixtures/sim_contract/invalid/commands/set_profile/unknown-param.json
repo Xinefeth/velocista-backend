@@ -1,0 +1,15 @@
+{
+  "description": "wheelbase no es un parámetro del perfil (jsonschema informa propertyNames como enum).",
+  "message": {
+    "cmd": "set_profile",
+    "measured": {
+      "wheelbase": 0.128
+    }
+  },
+  "expected": [
+    {
+      "rule": "enum",
+      "path": "/measured"
+    }
+  ]
+}

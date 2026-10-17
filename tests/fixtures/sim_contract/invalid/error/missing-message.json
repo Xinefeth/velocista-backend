@@ -1,0 +1,16 @@
+{
+  "description": "message es obligatorio.",
+  "message": {
+    "type": "error",
+    "v": 1,
+    "t_ms": 5310,
+    "code": "sim_only",
+    "cmd": "load_track"
+  },
+  "expected": [
+    {
+      "rule": "required",
+      "path": "/message"
+    }
+  ]
+}

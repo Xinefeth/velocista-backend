@@ -1,0 +1,12 @@
+{
+  "description": "go no es un comando del contrato.",
+  "message": {
+    "cmd": "go"
+  },
+  "expected": [
+    {
+      "rule": "unknown_cmd",
+      "path": "/cmd"
+    }
+  ]
+}

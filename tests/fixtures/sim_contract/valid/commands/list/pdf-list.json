@@ -1,0 +1,6 @@
+{
+  "description": "PDF v1.1: list pide robots y pistas disponibles.",
+  "message": {
+    "cmd": "list"
+  }
+}

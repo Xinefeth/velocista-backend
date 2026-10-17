@@ -1,0 +1,7 @@
+{
+  "description": "set_config que cambia solo base_speed; el resto de la configuración no cambia.",
+  "message": {
+    "cmd": "set_config",
+    "base_speed": 200
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "description": "set_rate sin hz.",
+  "message": {
+    "cmd": "set_rate"
+  },
+  "expected": [
+    {
+      "rule": "required",
+      "path": "/hz"
+    }
+  ]
+}

@@ -16,6 +16,9 @@ class RealtimeDeviceGateway:
     async def send_command(
         self, device: str, type: str, data: dict[str, Any], *, robot_id=None
     ) -> int:
+        simulator = hub.simulator
+        if device == "robot" and simulator is not None:
+            return await simulator.command(type, data, robot_id=robot_id)
         if type == "ack":
             raise Validation("invalid_command", "ack is not a command")
         try:

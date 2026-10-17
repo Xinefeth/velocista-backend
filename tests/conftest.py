@@ -7,6 +7,7 @@ import pytest
 
 from velocista.application.runs.ports import RunRepository
 from velocista.domain.runs.entities import Run
+from velocista.infrastructure.config.settings import settings
 
 
 class InMemoryRunRepository(RunRepository):
@@ -31,3 +32,9 @@ class InMemoryRunRepository(RunRepository):
 @pytest.fixture
 def runs_repo() -> InMemoryRunRepository:
     return InMemoryRunRepository()
+
+
+@pytest.fixture(autouse=True)
+def backend_without_external_simulator(monkeypatch):
+    """Existing API tests use simulated runs and commands without the external service."""
+    monkeypatch.setattr(settings, "sim_enabled", False)

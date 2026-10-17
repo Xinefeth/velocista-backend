@@ -1,0 +1,11 @@
+{
+  "description": "error por load_track durante una corrida: los comandos solo-sim requieren la corrida detenida (FR-032).",
+  "message": {
+    "type": "error",
+    "v": 1,
+    "t_ms": 31000,
+    "code": "run_active",
+    "cmd": "load_track",
+    "message": "detenga la corrida antes de cargar una pista"
+  }
+}

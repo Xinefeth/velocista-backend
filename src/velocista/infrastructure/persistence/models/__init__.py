@@ -5,6 +5,7 @@ A medida que se portan más contextos (runs, optimization, rules, auth), se aña
 """
 
 from velocista.infrastructure.persistence.models import (
+    external,  # noqa: F401
     optimization,  # noqa: F401
     rules,  # noqa: F401
     runs,  # noqa: F401

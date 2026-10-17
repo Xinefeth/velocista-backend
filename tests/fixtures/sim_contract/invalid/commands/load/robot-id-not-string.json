@@ -1,0 +1,13 @@
+{
+  "description": "robot_id debe ser string.",
+  "message": {
+    "cmd": "load",
+    "robot_id": 1
+  },
+  "expected": [
+    {
+      "rule": "type",
+      "path": "/robot_id"
+    }
+  ]
+}

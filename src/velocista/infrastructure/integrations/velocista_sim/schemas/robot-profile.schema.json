@@ -1,0 +1,479 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://velocista-sim.local/contract/v1/robot-profile.schema.json",
+  "title": "Perfil del robot",
+  "description": "Parámetros del robot con valor por defecto, valor medido opcional y origen (FR-035 a FR-037). Valor efectivo: measured si no es null; si no, default.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "ID del perfil; hello: robot.id. No admite valor medido.",
+      "$ref": "#/$defs/profile_param",
+      "properties": {
+        "default": {
+          "type": "string",
+          "minLength": 1
+        },
+        "measured": {
+          "const": null
+        }
+      }
+    },
+    "firmware": {
+      "description": "Versión de firmware; hello: robot.firmware.",
+      "$ref": "#/$defs/profile_param",
+      "properties": {
+        "default": {
+          "type": "string",
+          "minLength": 1
+        },
+        "measured": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        }
+      }
+    },
+    "hw_rev": {
+      "description": "Revisión de hardware; hello: robot.hw_rev.",
+      "$ref": "#/$defs/profile_param",
+      "properties": {
+        "default": {
+          "type": "string",
+          "minLength": 1
+        },
+        "measured": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        }
+      }
+    },
+    "line_sensors": {
+      "description": "Cantidad de sensores de línea; hello: capabilities.line_sensors.",
+      "$ref": "#/$defs/profile_param",
+      "properties": {
+        "default": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "measured": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        }
+      }
+    },
+    "adc_bits": {
+      "description": "Bits del ADC; hello: capabilities.adc_bits.",
+      "$ref": "#/$defs/profile_param",
+      "properties": {
+        "default": {
+          "type": "integer",
+          "minimum": 8,
+          "maximum": 16
+        },
+        "measured": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 8,
+          "maximum": 16
+        }
+      }
+    },
+    "sensor_pitch_m": {
+      "description": "Separación entre sensores, m.",
+      "$ref": "#/$defs/profile_param",
+      "properties": {
+        "default": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "measured": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "sensor_offset_m": {
+      "description": "Distancia de la regleta delante del eje, m.",
+      "$ref": "#/$defs/profile_param",
+      "properties": {
+        "default": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "measured": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "adc_white": {
+      "description": "Lectura en blanco, cuentas ADC.",
+      "$ref": "#/$defs/profile_param",
+      "properties": {
+        "default": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "measured": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 65535
+        }
+      }
+    },
+    "adc_black": {
+      "description": "Lectura en negro, cuentas ADC.",
+      "$ref": "#/$defs/profile_param",
+      "properties": {
+        "default": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "measured": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 65535
+        }
+      }
+    },
+    "adc_noise": {
+      "description": "Ruido de lectura (±), cuentas ADC.",
+      "$ref": "#/$defs/profile_param",
+      "properties": {
+        "default": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "measured": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      }
+    },
+    "motors": {
+      "description": "Cantidad de motores, fija en 2 en v1; hello: capabilities.motors.",
+      "$ref": "#/$defs/profile_param",
+      "properties": {
+        "default": {
+          "const": 2
+        },
+        "measured": {
+          "enum": [
+            2,
+            null
+          ]
+        }
+      }
+    },
+    "max_speed_mps": {
+      "description": "Velocidad máxima a PWM 255, m/s.",
+      "$ref": "#/$defs/profile_param",
+      "properties": {
+        "default": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "measured": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "motor_tau_ms": {
+      "description": "Constante de tiempo del motor, ms.",
+      "$ref": "#/$defs/profile_param",
+      "properties": {
+        "default": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "measured": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "wheelbase_m": {
+      "description": "Distancia entre ruedas, m.",
+      "$ref": "#/$defs/profile_param",
+      "properties": {
+        "default": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "measured": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "max_lateral_accel_mps2": {
+      "description": "Agarre lateral máximo, m/s².",
+      "$ref": "#/$defs/profile_param",
+      "properties": {
+        "default": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "measured": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "turbine": {
+      "description": "Tiene turbina; hello: capabilities.turbine.",
+      "$ref": "#/$defs/profile_param",
+      "properties": {
+        "default": {
+          "type": "boolean"
+        },
+        "measured": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "turbine_suction_n": {
+      "description": "Succión de la turbina, N; null si no tiene.",
+      "$ref": "#/$defs/profile_param",
+      "properties": {
+        "default": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "measured": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        }
+      }
+    },
+    "encoders": {
+      "description": "Tiene encoders; hello: capabilities.encoders.",
+      "$ref": "#/$defs/profile_param",
+      "properties": {
+        "default": {
+          "type": "boolean"
+        },
+        "measured": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "encoder_ticks_per_rev": {
+      "description": "Ticks por vuelta del encoder; null si no tiene.",
+      "$ref": "#/$defs/profile_param",
+      "properties": {
+        "default": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "measured": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        }
+      }
+    },
+    "imu": {
+      "description": "Tiene IMU; hello: capabilities.imu.",
+      "$ref": "#/$defs/profile_param",
+      "properties": {
+        "default": {
+          "type": "boolean"
+        },
+        "measured": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "battery_cells": {
+      "description": "Celdas de la batería; hello: capabilities.battery.cells.",
+      "$ref": "#/$defs/profile_param",
+      "properties": {
+        "default": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "measured": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        }
+      }
+    },
+    "battery_nominal_v": {
+      "description": "Voltaje nominal, V; hello: capabilities.battery.nominal_v.",
+      "$ref": "#/$defs/profile_param",
+      "properties": {
+        "default": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "measured": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "battery_voltage_sense": {
+      "description": "Mide el voltaje de la batería; hello: capabilities.battery.voltage_sense.",
+      "$ref": "#/$defs/profile_param",
+      "properties": {
+        "default": {
+          "type": "boolean"
+        },
+        "measured": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "lap_timing": {
+      "description": "Detecta vueltas; hello: capabilities.lap_timing.",
+      "$ref": "#/$defs/profile_param",
+      "properties": {
+        "default": {
+          "type": "boolean"
+        },
+        "measured": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "control_period_ms": {
+      "description": "Periodo del lazo de control, ms.",
+      "$ref": "#/$defs/profile_param",
+      "properties": {
+        "default": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "measured": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        }
+      }
+    }
+  },
+  "required": [
+    "id",
+    "firmware",
+    "hw_rev",
+    "line_sensors",
+    "adc_bits",
+    "sensor_pitch_m",
+    "sensor_offset_m",
+    "adc_white",
+    "adc_black",
+    "adc_noise",
+    "motors",
+    "max_speed_mps",
+    "motor_tau_ms",
+    "wheelbase_m",
+    "max_lateral_accel_mps2",
+    "turbine",
+    "turbine_suction_n",
+    "encoders",
+    "encoder_ticks_per_rev",
+    "imu",
+    "battery_cells",
+    "battery_nominal_v",
+    "battery_voltage_sense",
+    "lap_timing",
+    "control_period_ms"
+  ],
+  "$defs": {
+    "profile_param": {
+      "description": "Forma común de todo parámetro del perfil.",
+      "type": "object",
+      "properties": {
+        "source": {
+          "description": "Origen del valor por defecto.",
+          "enum": [
+            "defined",
+            "datasheet",
+            "estimated",
+            "current_robot"
+          ]
+        }
+      },
+      "required": [
+        "default",
+        "measured",
+        "source"
+      ]
+    }
+  }
+}

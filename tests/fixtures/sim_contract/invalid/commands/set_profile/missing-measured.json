@@ -1,0 +1,12 @@
+{
+  "description": "set_profile sin measured.",
+  "message": {
+    "cmd": "set_profile"
+  },
+  "expected": [
+    {
+      "rule": "required",
+      "path": "/measured"
+    }
+  ]
+}

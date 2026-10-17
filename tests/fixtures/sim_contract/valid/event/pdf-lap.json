@@ -1,0 +1,13 @@
+{
+  "description": "PDF v1.1: event lap de la vuelta 3, con v agregado.",
+  "hello": "sim-default",
+  "message": {
+    "type": "event",
+    "v": 1,
+    "t_ms": 30640,
+    "event": "lap",
+    "run_id": "r-0004",
+    "lap": 3,
+    "lap_ms": 3416
+  }
+}

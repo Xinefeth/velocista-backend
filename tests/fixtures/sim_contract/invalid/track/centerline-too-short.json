@@ -1,0 +1,29 @@
+{
+  "description": "centerline necesita al menos 2 puntos (escenario US3-2).",
+  "message": {
+    "id": "straight-open",
+    "v": 1,
+    "name": "Recta abierta de 1 m",
+    "units": "m",
+    "board": {
+      "width": 3.0,
+      "height": 2.5
+    },
+    "line_width": 0.019,
+    "closed": false,
+    "centerline": [
+      [1.0, 1.25]
+    ],
+    "gaps": [],
+    "start": {
+      "at": 0.0
+    },
+    "rules_profile": "lgr2026"
+  },
+  "expected": [
+    {
+      "rule": "minItems",
+      "path": "/centerline"
+    }
+  ]
+}

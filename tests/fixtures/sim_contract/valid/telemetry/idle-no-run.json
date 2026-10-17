@@ -1,0 +1,50 @@
+{
+  "description": "telemetry sin corrida: running false, sin run_id ni lap, con sim_truth y battery_v.",
+  "hello": "sim-default",
+  "message": {
+    "type": "telemetry",
+    "v": 1,
+    "t_ms": 12000,
+    "seq": 600,
+    "running": false,
+    "sensors": [
+      210,
+      198,
+      3870,
+      3912,
+      640,
+      205,
+      201,
+      199,
+      203,
+      197,
+      200,
+      204,
+      198,
+      202,
+      199,
+      201
+    ],
+    "line_position": 7342,
+    "line_lost": false,
+    "error": -158,
+    "control": {
+      "p": -7.1,
+      "i": 0,
+      "d": 2.3,
+      "out": -4.8
+    },
+    "motors": {
+      "left": 0,
+      "right": 0
+    },
+    "battery_v": 7.91,
+    "sim_truth": {
+      "x": 0.5,
+      "y": 0.45,
+      "theta": 0.0,
+      "speed_mps": 0.0,
+      "distance_m": 0.0
+    }
+  }
+}

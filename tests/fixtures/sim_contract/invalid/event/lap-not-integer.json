@@ -1,0 +1,18 @@
+{
+  "description": "lap debe ser entero.",
+  "message": {
+    "type": "event",
+    "v": 1,
+    "t_ms": 30640,
+    "event": "lap",
+    "run_id": "r-0004",
+    "lap": "3",
+    "lap_ms": 3416
+  },
+  "expected": [
+    {
+      "rule": "type",
+      "path": "/lap"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://velocista-sim.local/contract/v1/commands/reset.schema.json",
+  "title": "reset",
+  "description": "Solo-sim: vuelve el robot a la línea de salida (FR-029, FR-032).",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "../common.schema.json#/$defs/command_envelope"
+    }
+  ],
+  "properties": {
+    "cmd": {
+      "const": "reset"
+    }
+  }
+}

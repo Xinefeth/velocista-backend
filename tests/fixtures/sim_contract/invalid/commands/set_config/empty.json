@@ -1,0 +1,12 @@
+{
+  "description": "set_config debe traer al menos uno de controller, params o base_speed.",
+  "message": {
+    "cmd": "set_config"
+  },
+  "expected": [
+    {
+      "rule": "anyOf",
+      "path": ""
+    }
+  ]
+}

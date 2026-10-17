@@ -1,0 +1,11 @@
+{
+  "description": "PDF v1.1: event run_started, con v agregado (research R9).",
+  "hello": "sim-default",
+  "message": {
+    "type": "event",
+    "v": 1,
+    "t_ms": 27200,
+    "event": "run_started",
+    "run_id": "r-0004"
+  }
+}

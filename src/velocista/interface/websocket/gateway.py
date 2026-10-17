@@ -112,6 +112,9 @@ async def serve(ws, device, expected):
 
 @router.websocket("/ws/robot")
 async def ws_robot(ws: WebSocket):
+    if hub.simulator is not None:
+        await ws.close(code=1008, reason="External robot source is enabled")
+        return
     await serve(ws, "robot", settings.device_token_robot)
 
 
@@ -120,6 +123,7 @@ async def ws_timer(ws: WebSocket):
     await serve(ws, "timer", settings.device_token_timer)
 
 
+@router.websocket("/ws/consola")
 @router.websocket("/ws/console")
 async def ws_console(ws: WebSocket):
     origin = ws.headers.get("origin")
@@ -149,6 +153,16 @@ async def ws_console(ws: WebSocket):
             "received_ms": __import__("time").time_ns() // 1_000_000,
         }
     )
+    if hub.simulator:
+        await ws.send_json(
+            {
+                "sender": "sim",
+                "type": "connection",
+                "seq": 0,
+                "ts": 0,
+                "data": hub.simulator.snapshot(),
+            }
+        )
     # Send current snapshots when a console reconnects after the devices.
     for device, connection in list(hub.connections.items()):
         for type, model in (("manifest", connection.manifest), ("status", connection.last_status)):
@@ -169,4 +183,4 @@ async def ws_console(ws: WebSocket):
     except WebSocketDisconnect:
         pass
     finally:
-        hub.consoles.discard(ws)
+        await hub.remove_console(ws)

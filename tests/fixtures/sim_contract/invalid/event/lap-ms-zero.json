@@ -1,0 +1,18 @@
+{
+  "description": "lap_ms debe ser mayor que 0.",
+  "message": {
+    "type": "event",
+    "v": 1,
+    "t_ms": 30640,
+    "event": "lap",
+    "run_id": "r-0004",
+    "lap": 3,
+    "lap_ms": 0
+  },
+  "expected": [
+    {
+      "rule": "exclusiveMinimum",
+      "path": "/lap_ms"
+    }
+  ]
+}

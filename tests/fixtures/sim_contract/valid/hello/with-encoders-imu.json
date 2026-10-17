@@ -1,0 +1,29 @@
+{
+  "description": "hello del robot real con encoders e IMU: odometry trae distance_m, speed_mps y heading_rad.",
+  "message": {
+    "type": "hello",
+    "v": 1,
+    "t_ms": 0,
+    "session_id": "s-0001",
+    "source": "robot",
+    "robot": {
+      "id": "velocista-01",
+      "firmware": "esp32-0.1",
+      "hw_rev": "A"
+    },
+    "capabilities": {
+      "line_sensors": 16,
+      "adc_bits": 12,
+      "motors": 2,
+      "turbine": false,
+      "encoders": true,
+      "imu": true,
+      "lap_timing": false,
+      "battery": {
+        "cells": 2,
+        "nominal_v": 7.4,
+        "voltage_sense": false
+      }
+    }
+  }
+}

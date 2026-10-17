@@ -1,0 +1,15 @@
+{
+  "description": "kp debe ser ≥ 0.",
+  "message": {
+    "cmd": "set_config",
+    "params": {
+      "kp": -0.1
+    }
+  },
+  "expected": [
+    {
+      "rule": "minimum",
+      "path": "/params/kp"
+    }
+  ]
+}

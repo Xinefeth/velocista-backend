@@ -1,0 +1,6 @@
+{
+  "description": "PDF v1.1: reset vuelve el robot a la línea de salida.",
+  "message": {
+    "cmd": "reset"
+  }
+}

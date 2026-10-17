@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://velocista-sim.local/contract/v1/common.schema.json",
+  "title": "Piezas comunes del contrato v1",
+  "description": "Definiciones compartidas por los schemas de mensajes, comandos, perfil y pista.",
+  "$defs": {
+    "envelope": {
+      "description": "Envoltorio común de todo mensaje servidor→cliente (FR-010).",
+      "type": "object",
+      "properties": {
+        "type": {
+          "description": "Tipo de mensaje.",
+          "type": "string"
+        },
+        "v": {
+          "description": "Versión del protocolo; 1 en esta versión.",
+          "const": 1
+        },
+        "t_ms": {
+          "description": "Milisegundos desde el inicio de la sesión.",
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": ["type", "v", "t_ms"]
+    },
+    "command_envelope": {
+      "description": "Envoltorio común de todo comando cliente→servidor (FR-011).",
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "description": "Nombre del comando.",
+          "type": "string"
+        },
+        "v": {
+          "description": "Versión del protocolo; opcional, si se envía debe ser 1.",
+          "const": 1
+        }
+      },
+      "required": ["cmd"]
+    },
+    "run_id": {
+      "description": "Identificador opaco de la corrida, único dentro de la sesión.",
+      "type": "string",
+      "minLength": 1
+    },
+    "pwm": {
+      "description": "PWM de motor, entero −255…255.",
+      "type": "integer",
+      "minimum": -255,
+      "maximum": 255
+    },
+    "base_speed": {
+      "description": "Velocidad base del controlador, PWM 0–255.",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "rate_hz": {
+      "description": "Frecuencia de telemetría, entero 10–100 Hz.",
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 100
+    },
+    "pid_params": {
+      "description": "Parámetros del controlador PID.",
+      "type": "object",
+      "properties": {
+        "kp": { "type": "number", "minimum": 0 },
+        "ki": { "type": "number", "minimum": 0 },
+        "kd": { "type": "number", "minimum": 0 }
+      },
+      "required": ["kp", "ki", "kd"]
+    },
+    "controller_config": {
+      "description": "Configuración del controlador con la misma forma que en config.",
+      "type": "object",
+      "properties": {
+        "controller": { "enum": ["pid"] },
+        "params": { "$ref": "#/$defs/pid_params" },
+        "base_speed": { "$ref": "#/$defs/base_speed" }
+      },
+      "required": ["controller", "params", "base_speed"]
+    },
+    "track_id": {
+      "description": "Identificador de la pista activa, o null si no hay pista.",
+      "type": ["string", "null"],
+      "minLength": 1
+    },
+    "error_code": {
+      "description": "Código de error del conjunto cerrado de FR-027.",
+      "enum": [
+        "invalid_json",
+        "unknown_cmd",
+        "invalid_params",
+        "out_of_range",
+        "sim_only",
+        "run_active",
+        "no_run",
+        "unknown_robot",
+        "unknown_track",
+        "invalid_track",
+        "unsupported_version"
+      ]
+    }
+  }
+}

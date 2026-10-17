@@ -1,0 +1,9 @@
+{
+  "description": "PDF v1.1: set_profile registra wheelbase_m medido (escenario US3-3).",
+  "message": {
+    "cmd": "set_profile",
+    "measured": {
+      "wheelbase_m": 0.128
+    }
+  }
+}

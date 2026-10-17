@@ -1,0 +1,11 @@
+{
+  "description": "run_started también lo emite el robot real al aceptar start (FR-024).",
+  "hello": "robot-real",
+  "message": {
+    "type": "event",
+    "v": 1,
+    "t_ms": 27200,
+    "event": "run_started",
+    "run_id": "r-0004"
+  }
+}

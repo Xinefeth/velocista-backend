@@ -13,6 +13,8 @@ dependencies = [
     "alembic>=1.14",
     "psycopg[binary]>=3.2",
     "PyJWT>=2.10,<3",
+    "websockets>=15,<18",
+    "jsonschema>=4.23,<5",
 ]
 
 [project.optional-dependencies]

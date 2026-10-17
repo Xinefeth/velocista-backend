@@ -1,0 +1,11 @@
+{
+  "description": "PDF v1.1: error por load_track enviado al robot real, con code y cmd agregados (research R9).",
+  "message": {
+    "type": "error",
+    "v": 1,
+    "t_ms": 5310,
+    "code": "sim_only",
+    "cmd": "load_track",
+    "message": "load_track no aplica al robot real"
+  }
+}

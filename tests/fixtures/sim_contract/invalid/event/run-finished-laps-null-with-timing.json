@@ -1,0 +1,34 @@
+{
+  "description": "Con lap_timing = true, summary.laps no puede ser null.",
+  "hello": "sim-default",
+  "message": {
+    "type": "event",
+    "v": 1,
+    "t_ms": 41200,
+    "event": "run_finished",
+    "run_id": "r-0004",
+    "summary": {
+      "laps": null,
+      "best_lap_ms": null,
+      "avg_lap_ms": null,
+      "off_tracks": 1,
+      "track_id": "oval-01",
+      "config": {
+        "controller": "pid",
+        "params": {
+          "kp": 0.045,
+          "ki": 0,
+          "kd": 0.9
+        },
+        "base_speed": 180
+      },
+      "config_changed": false
+    }
+  },
+  "expected": [
+    {
+      "rule": "summary_laps_missing",
+      "path": "/summary/laps"
+    }
+  ]
+}

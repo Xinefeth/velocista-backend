@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://velocista-sim.local/contract/v1/messages/event.schema.json",
+  "title": "event",
+  "description": "Evento de corrida, enviado al instante (FR-022 a FR-025).",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "../common.schema.json#/$defs/envelope"
+    },
+    {
+      "if": {
+        "properties": {
+          "event": {
+            "const": "lap"
+          }
+        },
+        "required": [
+          "event"
+        ]
+      },
+      "then": {
+        "$ref": "#/$defs/lap"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event": {
+            "const": "off_track"
+          }
+        },
+        "required": [
+          "event"
+        ]
+      },
+      "then": {
+        "$ref": "#/$defs/off_track"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event": {
+            "const": "run_finished"
+          }
+        },
+        "required": [
+          "event"
+        ]
+      },
+      "then": {
+        "$ref": "#/$defs/run_finished"
+      }
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "event"
+    },
+    "event": {
+      "enum": [
+        "run_started",
+        "lap",
+        "off_track",
+        "run_finished"
+      ]
+    },
+    "run_id": {
+      "$ref": "../common.schema.json#/$defs/run_id"
+    }
+  },
+  "required": [
+    "event",
+    "run_id"
+  ],
+  "$defs": {
+    "lap": {
+      "properties": {
+        "lap": {
+          "description": "Número de vuelta completada.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "lap_ms": {
+          "description": "Duración de la vuelta en ms.",
+          "type": "integer",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "lap",
+        "lap_ms"
+      ]
+    },
+    "off_track": {
+      "properties": {
+        "reason": {
+          "enum": [
+            "line_lost"
+          ]
+        }
+      },
+      "required": [
+        "reason"
+      ]
+    },
+    "run_finished": {
+      "properties": {
+        "summary": {
+          "type": "object",
+          "properties": {
+            "laps": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "best_lap_ms": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "exclusiveMinimum": 0
+            },
+            "avg_lap_ms": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "exclusiveMinimum": 0
+            },
+            "off_tracks": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "track_id": {
+              "$ref": "../common.schema.json#/$defs/track_id"
+            },
+            "config": {
+              "description": "Configuración con la que empezó la corrida.",
+              "$ref": "../common.schema.json#/$defs/controller_config"
+            },
+            "config_changed": {
+              "description": "Se aceptó algún set_config durante la corrida.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "laps",
+            "best_lap_ms",
+            "avg_lap_ms",
+            "off_tracks",
+            "track_id",
+            "config",
+            "config_changed"
+          ],
+          "if": {
+            "properties": {
+              "laps": {
+                "enum": [
+                  0,
+                  null
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "best_lap_ms": {
+                "const": null
+              },
+              "avg_lap_ms": {
+                "const": null
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "best_lap_ms": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              },
+              "avg_lap_ms": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              }
+            }
+          }
+        }
+      },
+      "required": [
+        "summary"
+      ]
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "description": "code debe ser uno de los códigos de FR-027.",
+  "message": {
+    "type": "error",
+    "v": 1,
+    "t_ms": 5310,
+    "code": "boom",
+    "cmd": "load_track",
+    "message": "load_track no aplica al robot real"
+  },
+  "expected": [
+    {
+      "rule": "enum",
+      "path": "/code"
+    }
+  ]
+}

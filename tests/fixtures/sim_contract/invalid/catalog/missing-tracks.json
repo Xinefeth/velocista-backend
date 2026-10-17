@@ -1,0 +1,17 @@
+{
+  "description": "tracks es obligatorio.",
+  "message": {
+    "type": "catalog",
+    "v": 1,
+    "t_ms": 900,
+    "robots": [
+      "velocista-01"
+    ]
+  },
+  "expected": [
+    {
+      "rule": "required",
+      "path": "/tracks"
+    }
+  ]
+}

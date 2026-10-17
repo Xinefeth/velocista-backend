@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://velocista-sim.local/contract/v1/commands/load_track.schema.json",
+  "title": "load_track",
+  "description": "Solo-sim: carga una pista track v1 en el mundo (FR-029, FR-038).",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "../common.schema.json#/$defs/command_envelope"
+    }
+  ],
+  "properties": {
+    "cmd": {
+      "const": "load_track"
+    },
+    "track": {
+      "$ref": "../track.schema.json"
+    }
+  },
+  "required": [
+    "track"
+  ]
+}

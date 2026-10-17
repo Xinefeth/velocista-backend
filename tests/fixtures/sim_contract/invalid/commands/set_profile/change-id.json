@@ -1,0 +1,15 @@
+{
+  "description": "id es un parámetro de hello: solo cambia con load.",
+  "message": {
+    "cmd": "set_profile",
+    "measured": {
+      "id": "otro"
+    }
+  },
+  "expected": [
+    {
+      "rule": "enum",
+      "path": "/measured"
+    }
+  ]
+}
