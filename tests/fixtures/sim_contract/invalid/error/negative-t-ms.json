@@ -1,0 +1,17 @@
+{
+  "description": "t_ms no puede ser negativo.",
+  "message": {
+    "type": "error",
+    "v": 1,
+    "t_ms": -1,
+    "code": "sim_only",
+    "cmd": "load_track",
+    "message": "load_track no aplica al robot real"
+  },
+  "expected": [
+    {
+      "rule": "minimum",
+      "path": "/t_ms"
+    }
+  ]
+}

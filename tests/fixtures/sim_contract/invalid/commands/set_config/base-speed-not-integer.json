@@ -1,0 +1,13 @@
+{
+  "description": "base_speed debe ser entero (PWM 0–255).",
+  "message": {
+    "cmd": "set_config",
+    "base_speed": 180.5
+  },
+  "expected": [
+    {
+      "rule": "type",
+      "path": "/base_speed"
+    }
+  ]
+}

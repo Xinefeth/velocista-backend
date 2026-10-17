@@ -60,6 +60,8 @@ class SqlAlchemyRunHistoryRepository:
         if row.closed_at is None:
             raise Conflict("run_active", "Run is still active")
         laps = self._laps(row.id)
+        if row.context_snapshot.get("external"):
+            return self._external_summary(row, laps)
         if not laps:
             raise Conflict("run_without_laps", "Closed run has no registered laps")
         lap = best_lap(laps)
@@ -84,6 +86,38 @@ class SqlAlchemyRunHistoryRepository:
                 ]
             },
             "j": calculate_j(lap["time_s"], lap["accumulated_error"], lap["finished"]),
+        }
+
+    def _external_summary(self, row, laps):
+        snapshot = row.context_snapshot
+        summary = snapshot.get("summary")
+        completed = [lap for lap in laps if lap["finished"]]
+        best = min(completed, key=lambda lap: lap["time_s"]) if completed else None
+        changed = bool(summary and summary["config_changed"])
+        return {
+            **{
+                key: value
+                for key, value in as_dict(row).items()
+                if key not in {"closed_at", "context_snapshot"}
+            },
+            "controller_id": snapshot["controller"]["id"],
+            "parameters": snapshot["parameters"],
+            "summary": summary,
+            "config_changed": changed,
+            "optimization_eligible": bool(
+                summary
+                and summary["laps"]
+                and not changed
+                and row.closure_status == "finished"
+                and not snapshot.get("lost_samples")
+            ),
+            "time_s": summary["best_lap_ms"] / 1000 if summary and summary["best_lap_ms"] else None,
+            "finished": bool(best),
+            "accumulated_error": None,
+            "battery_v": None,
+            "sectors_s": [],
+            "time_source": "telemetry" if best else None,
+            "j": None,
         }
 
     def list_runs(

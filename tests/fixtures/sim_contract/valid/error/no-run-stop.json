@@ -1,0 +1,11 @@
+{
+  "description": "error que responde a stop sin corrida activa; no se emite run_finished (FR-031).",
+  "message": {
+    "type": "error",
+    "v": 1,
+    "t_ms": 1500,
+    "code": "no_run",
+    "cmd": "stop",
+    "message": "no hay una corrida activa"
+  }
+}

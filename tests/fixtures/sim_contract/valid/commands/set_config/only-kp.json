@@ -1,0 +1,9 @@
+{
+  "description": "set_config que cambia solo kp durante una corrida (escenario US2-7).",
+  "message": {
+    "cmd": "set_config",
+    "params": {
+      "kp": 0.05
+    }
+  }
+}

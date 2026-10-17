@@ -1,0 +1,6 @@
+{
+  "description": "PDF v1.1: stop detiene la corrida activa.",
+  "message": {
+    "cmd": "stop"
+  }
+}

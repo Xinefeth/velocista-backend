@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://velocista-sim.local/contract/v1/messages/config.schema.json",
+  "title": "config",
+  "description": "Configuración vigente; se envía al conectarse y tras cada cambio aceptado (FR-015, FR-016).",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "../common.schema.json#/$defs/envelope"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "config"
+    },
+    "controller": {
+      "description": "Tipo de controlador; en v1 solo pid.",
+      "enum": [
+        "pid"
+      ]
+    },
+    "params": {
+      "$ref": "../common.schema.json#/$defs/pid_params"
+    },
+    "base_speed": {
+      "description": "Entero, PWM 0–255.",
+      "$ref": "../common.schema.json#/$defs/base_speed"
+    },
+    "rate_hz": {
+      "description": "Entero 10–100.",
+      "$ref": "../common.schema.json#/$defs/rate_hz"
+    },
+    "track_id": {
+      "description": "String, o null si no hay pista.",
+      "$ref": "../common.schema.json#/$defs/track_id"
+    }
+  },
+  "required": [
+    "controller",
+    "params",
+    "base_speed",
+    "rate_hz",
+    "track_id"
+  ]
+}

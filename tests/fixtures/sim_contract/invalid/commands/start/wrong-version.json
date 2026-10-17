@@ -1,0 +1,13 @@
+{
+  "description": "Si un comando trae v, debe ser 1.",
+  "message": {
+    "cmd": "start",
+    "v": 2
+  },
+  "expected": [
+    {
+      "rule": "const",
+      "path": "/v"
+    }
+  ]
+}

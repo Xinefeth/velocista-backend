@@ -1,0 +1,20 @@
+{
+  "description": "El robot real responde robots con solo su propio id.",
+  "hello": "robot-real",
+  "message": {
+    "type": "catalog",
+    "v": 1,
+    "t_ms": 900,
+    "robots": [
+      "velocista-01",
+      "velocista-02"
+    ],
+    "tracks": []
+  },
+  "expected": [
+    {
+      "rule": "catalog_robot_real",
+      "path": "/robots"
+    }
+  ]
+}

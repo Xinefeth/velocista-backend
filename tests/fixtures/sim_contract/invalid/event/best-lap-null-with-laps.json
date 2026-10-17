@@ -1,0 +1,33 @@
+{
+  "description": "Con laps ≥ 1, best_lap_ms debe ser un entero > 0.",
+  "message": {
+    "type": "event",
+    "v": 1,
+    "t_ms": 41200,
+    "event": "run_finished",
+    "run_id": "r-0004",
+    "summary": {
+      "laps": 5,
+      "best_lap_ms": null,
+      "avg_lap_ms": 3480,
+      "off_tracks": 1,
+      "track_id": "oval-01",
+      "config": {
+        "controller": "pid",
+        "params": {
+          "kp": 0.045,
+          "ki": 0,
+          "kd": 0.9
+        },
+        "base_speed": 180
+      },
+      "config_changed": false
+    }
+  },
+  "expected": [
+    {
+      "rule": "type",
+      "path": "/summary/best_lap_ms"
+    }
+  ]
+}

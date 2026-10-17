@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://velocista-sim.local/contract/v1/commands/load.schema.json",
+  "title": "load",
+  "description": "Solo-sim: cambia el perfil de robot; el servidor reenvía hello y config (FR-013, FR-029).",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "../common.schema.json#/$defs/command_envelope"
+    }
+  ],
+  "properties": {
+    "cmd": {
+      "const": "load"
+    },
+    "robot_id": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "robot_id"
+  ]
+}

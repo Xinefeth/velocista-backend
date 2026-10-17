@@ -1,0 +1,13 @@
+{
+  "description": "hz = 150 supera el máximo de 100 (escenario US2-6).",
+  "message": {
+    "cmd": "set_rate",
+    "hz": 150
+  },
+  "expected": [
+    {
+      "rule": "maximum",
+      "path": "/hz"
+    }
+  ]
+}

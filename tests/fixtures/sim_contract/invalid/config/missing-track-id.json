@@ -1,0 +1,22 @@
+{
+  "description": "track_id es obligatorio (null si no hay pista).",
+  "message": {
+    "type": "config",
+    "v": 1,
+    "t_ms": 120,
+    "controller": "pid",
+    "params": {
+      "kp": 0.045,
+      "ki": 0,
+      "kd": 0.9
+    },
+    "base_speed": 180,
+    "rate_hz": 50
+  },
+  "expected": [
+    {
+      "rule": "required",
+      "path": "/track_id"
+    }
+  ]
+}

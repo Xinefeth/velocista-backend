@@ -1,0 +1,35 @@
+{
+  "description": "adc_bits admite 8 a 16.",
+  "message": {
+    "type": "hello",
+    "v": 1,
+    "t_ms": 0,
+    "session_id": "s-7f3a",
+    "source": "sim",
+    "robot": {
+      "id": "velocista-01",
+      "firmware": "sim-0.1",
+      "hw_rev": "A"
+    },
+    "capabilities": {
+      "line_sensors": 16,
+      "adc_bits": 20,
+      "motors": 2,
+      "turbine": false,
+      "encoders": false,
+      "imu": false,
+      "lap_timing": true,
+      "battery": {
+        "cells": 2,
+        "nominal_v": 7.4,
+        "voltage_sense": true
+      }
+    }
+  },
+  "expected": [
+    {
+      "rule": "maximum",
+      "path": "/capabilities/adc_bits"
+    }
+  ]
+}

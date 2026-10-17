@@ -1,0 +1,18 @@
+{
+  "description": "config enviado al instante tras aceptar set_config con kp = 0.05 durante una corrida (escenario US2-7).",
+  "hello": "sim-default",
+  "message": {
+    "type": "config",
+    "v": 1,
+    "t_ms": 28900,
+    "controller": "pid",
+    "params": {
+      "kp": 0.05,
+      "ki": 0,
+      "kd": 0.9
+    },
+    "base_speed": 180,
+    "rate_hz": 50,
+    "track_id": "oval-01"
+  }
+}

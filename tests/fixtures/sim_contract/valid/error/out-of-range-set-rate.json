@@ -1,0 +1,11 @@
+{
+  "description": "error que responde a set_rate con hz = 150; la frecuencia no cambia (escenario US2-6).",
+  "message": {
+    "type": "error",
+    "v": 1,
+    "t_ms": 3120,
+    "code": "out_of_range",
+    "cmd": "set_rate",
+    "message": "hz = 150 está fuera del rango 10–100"
+  }
+}

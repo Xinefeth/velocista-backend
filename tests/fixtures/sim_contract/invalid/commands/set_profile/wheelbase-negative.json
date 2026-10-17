@@ -1,0 +1,15 @@
+{
+  "description": "wheelbase_m medido debe ser > 0.",
+  "message": {
+    "cmd": "set_profile",
+    "measured": {
+      "wheelbase_m": -0.1
+    }
+  },
+  "expected": [
+    {
+      "rule": "exclusiveMinimum",
+      "path": "/measured/wheelbase_m"
+    }
+  ]
+}

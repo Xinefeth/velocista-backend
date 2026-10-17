@@ -1,0 +1,17 @@
+{
+  "description": "Un event lap debe traer lap_ms.",
+  "message": {
+    "type": "event",
+    "v": 1,
+    "t_ms": 30640,
+    "event": "lap",
+    "run_id": "r-0004",
+    "lap": 3
+  },
+  "expected": [
+    {
+      "rule": "required",
+      "path": "/lap_ms"
+    }
+  ]
+}

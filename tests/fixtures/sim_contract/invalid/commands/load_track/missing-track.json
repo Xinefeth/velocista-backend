@@ -1,0 +1,12 @@
+{
+  "description": "load_track sin track.",
+  "message": {
+    "cmd": "load_track"
+  },
+  "expected": [
+    {
+      "rule": "required",
+      "path": "/track"
+    }
+  ]
+}

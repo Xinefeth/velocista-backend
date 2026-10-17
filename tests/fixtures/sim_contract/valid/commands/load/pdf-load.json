@@ -1,0 +1,7 @@
+{
+  "description": "PDF v1.1: load cambia el perfil de robot.",
+  "message": {
+    "cmd": "load",
+    "robot_id": "velocista-01"
+  }
+}

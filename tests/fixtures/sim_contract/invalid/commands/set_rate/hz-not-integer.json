@@ -1,0 +1,13 @@
+{
+  "description": "hz debe ser entero.",
+  "message": {
+    "cmd": "set_rate",
+    "hz": 20.5
+  },
+  "expected": [
+    {
+      "rule": "type",
+      "path": "/hz"
+    }
+  ]
+}

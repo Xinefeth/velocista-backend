@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://velocista-sim.local/contract/v1/messages/hello.schema.json",
+  "title": "hello",
+  "description": "Describe el robot de la sesión; se envía al conectarse y tras cada load aceptado (FR-013).",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "../common.schema.json#/$defs/envelope"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "hello"
+    },
+    "session_id": {
+      "description": "Identificador de la sesión.",
+      "type": "string",
+      "minLength": 1
+    },
+    "source": {
+      "description": "Origen de los datos.",
+      "enum": [
+        "sim",
+        "robot"
+      ]
+    },
+    "robot": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "ID del perfil de robot.",
+          "type": "string",
+          "minLength": 1
+        },
+        "firmware": {
+          "description": "Versión de firmware.",
+          "type": "string",
+          "minLength": 1
+        },
+        "hw_rev": {
+          "description": "Revisión de hardware.",
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "firmware",
+        "hw_rev"
+      ]
+    },
+    "capabilities": {
+      "type": "object",
+      "properties": {
+        "line_sensors": {
+          "description": "Cantidad de sensores de línea.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "adc_bits": {
+          "description": "Bits del ADC de los sensores.",
+          "type": "integer",
+          "minimum": 8,
+          "maximum": 16
+        },
+        "motors": {
+          "description": "Cantidad de motores; fijo en 2 en v1.",
+          "const": 2
+        },
+        "turbine": {
+          "type": "boolean"
+        },
+        "encoders": {
+          "type": "boolean"
+        },
+        "imu": {
+          "type": "boolean"
+        },
+        "lap_timing": {
+          "description": "El robot detecta vueltas.",
+          "type": "boolean"
+        },
+        "battery": {
+          "type": "object",
+          "properties": {
+            "cells": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "nominal_v": {
+              "description": "Voltaje nominal en V.",
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "voltage_sense": {
+              "description": "El robot mide su voltaje.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "cells",
+            "nominal_v",
+            "voltage_sense"
+          ]
+        }
+      },
+      "required": [
+        "line_sensors",
+        "adc_bits",
+        "motors",
+        "turbine",
+        "encoders",
+        "imu",
+        "lap_timing",
+        "battery"
+      ]
+    }
+  },
+  "required": [
+    "session_id",
+    "source",
+    "robot",
+    "capabilities"
+  ]
+}

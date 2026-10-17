@@ -1,0 +1,12 @@
+{
+  "description": "PDF v1.1: event off_track por pérdida de línea, con v agregado.",
+  "hello": "sim-default",
+  "message": {
+    "type": "event",
+    "v": 1,
+    "t_ms": 41200,
+    "event": "off_track",
+    "run_id": "r-0004",
+    "reason": "line_lost"
+  }
+}

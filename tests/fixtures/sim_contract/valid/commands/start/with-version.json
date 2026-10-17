@@ -1,0 +1,7 @@
+{
+  "description": "start con v = 1 explícito (v es opcional en los comandos).",
+  "message": {
+    "cmd": "start",
+    "v": 1
+  }
+}

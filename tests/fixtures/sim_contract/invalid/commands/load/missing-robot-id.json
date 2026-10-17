@@ -1,0 +1,12 @@
+{
+  "description": "load sin robot_id.",
+  "message": {
+    "cmd": "load"
+  },
+  "expected": [
+    {
+      "rule": "required",
+      "path": "/robot_id"
+    }
+  ]
+}

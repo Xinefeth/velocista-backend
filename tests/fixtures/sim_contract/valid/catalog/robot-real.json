@@ -1,0 +1,13 @@
+{
+  "description": "catalog del robot real: solo su propio id y sin pistas (escenario US4-4).",
+  "hello": "robot-real",
+  "message": {
+    "type": "catalog",
+    "v": 1,
+    "t_ms": 900,
+    "robots": [
+      "velocista-01"
+    ],
+    "tracks": []
+  }
+}

@@ -9,6 +9,18 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
+    sim_enabled: bool = False
+    sim_ws_url: str = "wss://velocista-sim-production.up.railway.app/ws"
+    sim_robot_id: str | None = None
+    sim_track_id: str | None = None
+    sim_internal_robot_id: str | None = None
+    sim_setup_id: int | None = Field(default=None, ge=1)
+    sim_profile_id: str | None = None
+    sim_store_telemetry: bool = True
+    sim_queue_size: int = Field(default=5000, ge=32, le=100000)
+    sim_command_timeout: float = Field(default=10, gt=0, le=120)
+    sim_reconnect_max_seconds: float = Field(default=30, ge=1, le=300)
+
     app_env: str = "development"
     log_level: str = "INFO"
     secret_key: str = "change-me"

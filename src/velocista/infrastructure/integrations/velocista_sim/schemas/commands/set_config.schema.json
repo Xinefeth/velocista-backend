@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://velocista-sim.local/contract/v1/commands/set_config.schema.json",
+  "title": "set_config",
+  "description": "Cambia la configuración del controlador; al menos un campo (FR-029, FR-034).",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "../common.schema.json#/$defs/command_envelope"
+    }
+  ],
+  "properties": {
+    "cmd": {
+      "const": "set_config"
+    },
+    "controller": {
+      "description": "Tipo de controlador; en v1 solo pid.",
+      "enum": [
+        "pid"
+      ]
+    },
+    "params": {
+      "description": "Parámetros del PID que se cambian; los omitidos conservan su valor.",
+      "type": "object",
+      "properties": {
+        "kp": {
+          "type": "number",
+          "minimum": 0
+        },
+        "ki": {
+          "type": "number",
+          "minimum": 0
+        },
+        "kd": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "minProperties": 1
+    },
+    "base_speed": {
+      "$ref": "../common.schema.json#/$defs/base_speed"
+    }
+  },
+  "anyOf": [
+    {
+      "required": [
+        "controller"
+      ]
+    },
+    {
+      "required": [
+        "params"
+      ]
+    },
+    {
+      "required": [
+        "base_speed"
+      ]
+    }
+  ]
+}

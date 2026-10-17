@@ -1,0 +1,15 @@
+{
+  "description": "encoder_ticks_per_rev debe ser entero o null.",
+  "message": {
+    "cmd": "set_profile",
+    "measured": {
+      "encoder_ticks_per_rev": 12.5
+    }
+  },
+  "expected": [
+    {
+      "rule": "type",
+      "path": "/measured/encoder_ticks_per_rev"
+    }
+  ]
+}

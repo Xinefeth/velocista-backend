@@ -1,0 +1,28 @@
+{
+  "description": "run_finished de una corrida que empezó con kp = 0.045 y recibió set_config con kp = 0.05: summary.config conserva la configuración inicial y config_changed es true (escenario US2-7).",
+  "hello": "sim-default",
+  "message": {
+    "type": "event",
+    "v": 1,
+    "t_ms": 41200,
+    "event": "run_finished",
+    "run_id": "r-0004",
+    "summary": {
+      "laps": 5,
+      "best_lap_ms": 3416,
+      "avg_lap_ms": 3480,
+      "off_tracks": 1,
+      "track_id": "oval-01",
+      "config": {
+        "controller": "pid",
+        "params": {
+          "kp": 0.045,
+          "ki": 0,
+          "kd": 0.9
+        },
+        "base_speed": 180
+      },
+      "config_changed": true
+    }
+  }
+}

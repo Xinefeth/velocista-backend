@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://velocista-sim.local/contract/v1/commands/set_rate.schema.json",
+  "title": "set_rate",
+  "description": "Cambia la frecuencia de telemetría (FR-017, FR-029).",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "../common.schema.json#/$defs/command_envelope"
+    }
+  ],
+  "properties": {
+    "cmd": {
+      "const": "set_rate"
+    },
+    "hz": {
+      "description": "Frecuencia en Hz, entero 10–100.",
+      "$ref": "../common.schema.json#/$defs/rate_hz"
+    }
+  },
+  "required": [
+    "hz"
+  ]
+}

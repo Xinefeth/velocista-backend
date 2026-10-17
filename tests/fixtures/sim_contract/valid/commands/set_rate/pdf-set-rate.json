@@ -1,0 +1,7 @@
+{
+  "description": "PDF v1.1: set_rate a 20 Hz (escenario US2-5).",
+  "message": {
+    "cmd": "set_rate",
+    "hz": 20
+  }
+}

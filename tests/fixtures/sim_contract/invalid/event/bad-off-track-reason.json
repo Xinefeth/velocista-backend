@@ -1,0 +1,17 @@
+{
+  "description": "En v1 off_track solo admite reason line_lost.",
+  "message": {
+    "type": "event",
+    "v": 1,
+    "t_ms": 41200,
+    "event": "off_track",
+    "run_id": "r-0004",
+    "reason": "crash"
+  },
+  "expected": [
+    {
+      "rule": "enum",
+      "path": "/reason"
+    }
+  ]
+}

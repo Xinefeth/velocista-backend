@@ -1,0 +1,17 @@
+{
+  "description": "message debe ser string.",
+  "message": {
+    "type": "error",
+    "v": 1,
+    "t_ms": 5310,
+    "code": "sim_only",
+    "cmd": "load_track",
+    "message": 404
+  },
+  "expected": [
+    {
+      "rule": "type",
+      "path": "/message"
+    }
+  ]
+}

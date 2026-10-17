@@ -38,6 +38,9 @@ class RunModel(Base):
             name="fk_run_version_robot",
             ondelete="RESTRICT",
         ),
+        UniqueConstraint(
+            "source", "external_session_id", "external_run_id", name="uq_run_external"
+        ),
         UniqueConstraint("ingestion_id", name="uq_run_ingestion_id"),
         CheckConstraint(
             "source IN ('sim','robot') AND mode IN ('test','competition') "
@@ -61,12 +64,15 @@ class RunModel(Base):
     date: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     source: Mapped[str] = mapped_column(String(10))
-    mode: Mapped[str] = mapped_column(String(20))
-    line: Mapped[str] = mapped_column(String(10))
-    battery_compensation: Mapped[bool] = mapped_column(Boolean)
-    turbine_power_pct: Mapped[float] = mapped_column(Float)
+    mode: Mapped[str | None] = mapped_column(String(20))
+    line: Mapped[str | None] = mapped_column(String(10))
+    battery_compensation: Mapped[bool | None] = mapped_column(Boolean)
+    turbine_power_pct: Mapped[float | None] = mapped_column(Float)
     context_snapshot: Mapped[dict[str, Any]] = mapped_column(JSONB)
     note: Mapped[str] = mapped_column(Text, default="", server_default="")
+    external_session_id: Mapped[str | None] = mapped_column(ForeignKey("external_session.id"))
+    external_run_id: Mapped[str | None] = mapped_column(String(160))
+    closure_status: Mapped[str | None] = mapped_column(String(20))
     ingestion_id: Mapped[str | None] = mapped_column(String(120), nullable=True)
 
 
@@ -94,9 +100,9 @@ class LapModel(Base):
     time_s: Mapped[float | None] = mapped_column(Float)
     duration_s: Mapped[float] = mapped_column(Float)
     internal_time_ms: Mapped[int | None] = mapped_column(BigInteger)
-    accumulated_error: Mapped[float] = mapped_column(Float)
-    lost_lines: Mapped[int] = mapped_column(Integer)
-    battery_v: Mapped[float] = mapped_column(Float)
+    accumulated_error: Mapped[float | None] = mapped_column(Float)
+    lost_lines: Mapped[int | None] = mapped_column(Integer)
+    battery_v: Mapped[float | None] = mapped_column(Float)
     finished: Mapped[bool] = mapped_column(Boolean)
     time_source: Mapped[str] = mapped_column(String(20))
     reason: Mapped[str] = mapped_column(Text, default="", server_default="")
@@ -127,4 +133,4 @@ class LapSegmentModel(Base):
     type: Mapped[str] = mapped_column(String(30))
     duration_s: Mapped[float] = mapped_column(Float)
     angle_degrees: Mapped[float] = mapped_column(Float)
-    accumulated_error: Mapped[float] = mapped_column(Float)
+    accumulated_error: Mapped[float | None] = mapped_column(Float)

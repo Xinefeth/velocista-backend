@@ -1,0 +1,15 @@
+{
+  "description": "line_sensors aparece en hello: solo load puede cambiarlo (escenario US3-5).",
+  "message": {
+    "cmd": "set_profile",
+    "measured": {
+      "line_sensors": 8
+    }
+  },
+  "expected": [
+    {
+      "rule": "enum",
+      "path": "/measured"
+    }
+  ]
+}

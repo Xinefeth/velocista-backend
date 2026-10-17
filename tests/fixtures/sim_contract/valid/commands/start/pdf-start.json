@@ -1,0 +1,6 @@
+{
+  "description": "PDF v1.1: start inicia una corrida.",
+  "message": {
+    "cmd": "start"
+  }
+}

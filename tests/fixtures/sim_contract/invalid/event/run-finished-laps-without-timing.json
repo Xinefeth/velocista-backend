@@ -1,0 +1,42 @@
+{
+  "description": "Con lap_timing = false, laps, best_lap_ms y avg_lap_ms deben ser null.",
+  "hello": "robot-real",
+  "message": {
+    "type": "event",
+    "v": 1,
+    "t_ms": 41200,
+    "event": "run_finished",
+    "run_id": "r-0004",
+    "summary": {
+      "laps": 5,
+      "best_lap_ms": 3416,
+      "avg_lap_ms": 3480,
+      "off_tracks": 1,
+      "track_id": "oval-01",
+      "config": {
+        "controller": "pid",
+        "params": {
+          "kp": 0.045,
+          "ki": 0,
+          "kd": 0.9
+        },
+        "base_speed": 180
+      },
+      "config_changed": false
+    }
+  },
+  "expected": [
+    {
+      "rule": "summary_laps_without_timing",
+      "path": "/summary/laps"
+    },
+    {
+      "rule": "summary_laps_without_timing",
+      "path": "/summary/best_lap_ms"
+    },
+    {
+      "rule": "summary_laps_without_timing",
+      "path": "/summary/avg_lap_ms"
+    }
+  ]
+}

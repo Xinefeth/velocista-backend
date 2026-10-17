@@ -44,9 +44,22 @@ async def lifespan(app: FastAPI):
 
     previous = hub.message_handler
     hub.message_handler = handle_message
+    simulator = None
+    if settings.sim_enabled:
+        from velocista.infrastructure.integrations.velocista_sim.client import SimulatorClient
+        from velocista.infrastructure.integrations.velocista_sim.persistence import Store
+
+        simulator = SimulatorClient(settings, Store(settings), hub)
+        hub.simulator = simulator
+        app.state.simulator = simulator
+        await simulator.start()
     try:
         yield
     finally:
+        if simulator:
+            await simulator.close()
+        hub.simulator = None
+        await hub.close_relays()
         hub.message_handler = previous
 
 
@@ -76,6 +89,12 @@ def create_app() -> FastAPI:
             "environment": settings.app_env,
             "devices": device_status(),  # {robot, timer}
         }
+
+    @app.get("/api/simulator", tags=["devices"], operation_id="getSimulatorStatus")
+    def simulator_status():
+        from velocista.infrastructure.realtime.registry import hub
+
+        return hub.simulator.snapshot() if hub.simulator else {"state": "disabled"}
 
     for router in MODULE_ROUTERS:
         app.include_router(router)

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://velocista-sim.local/contract/v1/commands/stop.schema.json",
+  "title": "stop",
+  "description": "Detiene la corrida activa y emite run_finished (FR-029, FR-031).",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "../common.schema.json#/$defs/command_envelope"
+    }
+  ],
+  "properties": {
+    "cmd": {
+      "const": "stop"
+    }
+  }
+}

@@ -13,7 +13,7 @@ class SegmentOut(BaseModel):
     type: str
     duration_s: float
     angle_degrees: float
-    accumulated_error: float
+    accumulated_error: float | None
 
 
 class LapOut(BaseModel):
@@ -23,11 +23,11 @@ class LapOut(BaseModel):
     time_s: float | None
     duration_s: float
     internal_time_ms: int | None
-    accumulated_error: float
-    lost_lines: int
-    battery_v: float
+    accumulated_error: float | None
+    lost_lines: int | None
+    battery_v: float | None
     finished: bool
-    time_source: Literal["finish", "telemetry"]
+    time_source: Literal["finish", "telemetry"] | None
     reason: str
     sectors_s: list[float]
     segments: list[SegmentOut]
@@ -45,18 +45,24 @@ class RunOut(BaseModel):
     parameters: dict[str, float]
     date: datetime
     source: Literal["sim", "robot"]
-    mode: Literal["test", "competition"]
-    line: Literal["black", "white"]
-    battery_compensation: bool
-    turbine_power_pct: float
+    mode: Literal["test", "competition"] | None
+    line: Literal["black", "white"] | None
+    battery_compensation: bool | None
+    turbine_power_pct: float | None
     time_s: float | None
     finished: bool
-    accumulated_error: float
-    battery_v: float
+    accumulated_error: float | None
+    battery_v: float | None
     sectors_s: list[float]
-    time_source: Literal["finish", "telemetry"]
+    time_source: Literal["finish", "telemetry"] | None
+    external_session_id: str | None = None
+    external_run_id: str | None = None
+    closure_status: str | None = None
+    summary: dict | None = None
+    config_changed: bool = False
+    optimization_eligible: bool = False
     note: str
-    j: float
+    j: float | None
 
 
 class RunsPage(BaseModel):

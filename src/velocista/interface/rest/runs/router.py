@@ -86,6 +86,13 @@ def ingest_simulation_run(
 def create_simulated_run(
     service: Service, robot_id: Annotated[str, Query(min_length=1, max_length=40)]
 ):
+    if settings.sim_enabled:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "Use robot commands to run the external simulator; synthetic generation is disabled"
+            ),
+        )
     return service.simulate(robot_id)
 
 

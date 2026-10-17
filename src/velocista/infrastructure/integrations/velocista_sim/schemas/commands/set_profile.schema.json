@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://velocista-sim.local/contract/v1/commands/set_profile.schema.json",
+  "title": "set_profile",
+  "description": "Solo-sim: fija (valor) o borra (null) valores medidos de parámetros físicos y de calibración; todo o nada (FR-037).",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "../common.schema.json#/$defs/command_envelope"
+    }
+  ],
+  "properties": {
+    "cmd": {
+      "const": "set_profile"
+    },
+    "measured": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "enum": [
+          "sensor_pitch_m",
+          "sensor_offset_m",
+          "adc_white",
+          "adc_black",
+          "adc_noise",
+          "max_speed_mps",
+          "motor_tau_ms",
+          "wheelbase_m",
+          "max_lateral_accel_mps2",
+          "turbine_suction_n",
+          "encoder_ticks_per_rev",
+          "control_period_ms"
+        ]
+      },
+      "properties": {
+        "sensor_pitch_m": {
+          "$ref": "../robot-profile.schema.json#/properties/sensor_pitch_m/properties/measured"
+        },
+        "sensor_offset_m": {
+          "$ref": "../robot-profile.schema.json#/properties/sensor_offset_m/properties/measured"
+        },
+        "adc_white": {
+          "$ref": "../robot-profile.schema.json#/properties/adc_white/properties/measured"
+        },
+        "adc_black": {
+          "$ref": "../robot-profile.schema.json#/properties/adc_black/properties/measured"
+        },
+        "adc_noise": {
+          "$ref": "../robot-profile.schema.json#/properties/adc_noise/properties/measured"
+        },
+        "max_speed_mps": {
+          "$ref": "../robot-profile.schema.json#/properties/max_speed_mps/properties/measured"
+        },
+        "motor_tau_ms": {
+          "$ref": "../robot-profile.schema.json#/properties/motor_tau_ms/properties/measured"
+        },
+        "wheelbase_m": {
+          "$ref": "../robot-profile.schema.json#/properties/wheelbase_m/properties/measured"
+        },
+        "max_lateral_accel_mps2": {
+          "$ref": "../robot-profile.schema.json#/properties/max_lateral_accel_mps2/properties/measured"
+        },
+        "turbine_suction_n": {
+          "$ref": "../robot-profile.schema.json#/properties/turbine_suction_n/properties/measured"
+        },
+        "encoder_ticks_per_rev": {
+          "$ref": "../robot-profile.schema.json#/properties/encoder_ticks_per_rev/properties/measured"
+        },
+        "control_period_ms": {
+          "$ref": "../robot-profile.schema.json#/properties/control_period_ms/properties/measured"
+        }
+      }
+    }
+  },
+  "required": [
+    "measured"
+  ]
+}

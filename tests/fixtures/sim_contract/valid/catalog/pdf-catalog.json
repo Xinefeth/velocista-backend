@@ -1,0 +1,15 @@
+{
+  "description": "PDF v1.1: catalog en respuesta a list.",
+  "hello": "sim-default",
+  "message": {
+    "type": "catalog",
+    "v": 1,
+    "t_ms": 900,
+    "robots": [
+      "velocista-01"
+    ],
+    "tracks": [
+      "oval-01"
+    ]
+  }
+}

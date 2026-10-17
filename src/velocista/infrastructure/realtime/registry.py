@@ -35,16 +35,55 @@ class Registry:
         self.connections: dict[str, Connection] = {}
         self.consoles: set = set()
         self.message_handler = None
+        self.simulator = None
+        self.relays = {}
 
     async def broadcast(self, sender, type, data, seq=0, ts=0):
         frame = dict(
             sender=sender, type=type, data=data, seq=seq, ts=ts, received_ms=milliseconds()
         )
         for ws in list(self.consoles):
-            try:
-                await ws.send_json(frame)
-            except (RuntimeError, OSError):
+            if ws not in self.relays:
+                queue = asyncio.Queue(maxsize=128)
+                task = asyncio.create_task(self._relay(ws, queue))
+                self.relays[ws] = (queue, task)
+            queue, task = self.relays[ws]
+            if queue.full():
                 self.consoles.discard(ws)
+                task.cancel()
+                self.relays.pop(ws, None)
+                asyncio.create_task(self._close_slow(ws))
+            else:
+                queue.put_nowait(frame)
+        await asyncio.sleep(0)
+
+    async def _close_slow(self, ws):
+        try:
+            await asyncio.wait_for(ws.close(code=1013), timeout=1)
+        except (TimeoutError, RuntimeError, OSError):
+            pass
+
+    async def _relay(self, ws, queue):
+        try:
+            while True:
+                frame = await queue.get()
+                await asyncio.wait_for(ws.send_json(frame), timeout=2)
+        except (TimeoutError, RuntimeError, OSError):
+            self.consoles.discard(ws)
+            await self._close_slow(ws)
+        finally:
+            self.relays.pop(ws, None)
+
+    async def remove_console(self, ws):
+        self.consoles.discard(ws)
+        entry = self.relays.pop(ws, None)
+        if entry:
+            entry[1].cancel()
+            await asyncio.gather(entry[1], return_exceptions=True)
+
+    async def close_relays(self):
+        for ws in list(self.relays):
+            await self.remove_console(ws)
 
     async def event(self, code, message, detail=""):
         await self.broadcast(
@@ -80,7 +119,10 @@ hub = Registry()
 
 
 def device_status():
-    return {name: name in hub.connections for name in DEVICES}
+    result = {name: name in hub.connections for name in DEVICES}
+    if hub.simulator:
+        result["simulator"] = hub.simulator.status == "ready"
+    return result
 
 
 def is_connected(name):
