@@ -11,6 +11,7 @@ from velocista.infrastructure.realtime.device_gateway import (
     RealtimeDeviceGateway,
 )
 from velocista.infrastructure.realtime.registry import hub
+from velocista.interface.rest.errors import error_responses
 
 router = APIRouter(prefix="/api/devices", tags=["devices"])
 
@@ -22,7 +23,18 @@ class Command(BaseModel):
     robot_id: str | None = None
 
 
-@router.get("/robot/manifest", operation_id="getRobotManifest")
+@router.get(
+    "/robot/manifest",
+    operation_id="getRobotManifest",
+    summary="Get the manifest of the connected robot",
+    description=(
+        "Returns the manifest the robot sent when it connected: channels, "
+        "controllers, accepted commands and frequencies."
+    ),
+    responses=error_responses(
+        {404: "The robot is not connected or has not sent its manifest (`no_manifest`)"}
+    ),
+)
 def get_manifest():
     connection = hub.connections.get("robot")
     if not connection or not connection.manifest:
@@ -30,7 +42,34 @@ def get_manifest():
     return connection.manifest.model_dump(exclude_none=True)
 
 
-@router.post("/{device}/commands", status_code=202, operation_id="sendCommand")
+@router.post(
+    "/{device}/commands",
+    status_code=202,
+    operation_id="sendCommand",
+    summary="Send a command to a device",
+    description=(
+        "Low-level command to the `robot` or the `timer`. The command is "
+        "validated against the message contract, queued (HTTP 202) and "
+        "acknowledged through the console WebSocket."
+    ),
+    responses=error_responses(
+        {
+            409: (
+                "Robot not connected (`no_manifest`), not calibrated (`not_calibrated`), "
+                "busy or locked by competition mode"
+            ),
+            422: (
+                "Command is not part of the contract (`invalid_command`) or the robot "
+                "does not declare it (`unknown_command`)"
+            ),
+            503: (
+                "Device disconnected (`device_unavailable`); this body is `{reason, "
+                "detail}` without the outer `detail`"
+            ),
+        },
+        plain=[503],
+    ),
+)
 async def send_command(device: Literal["robot", "timer"], command: Command):
     try:
         seq = await RealtimeDeviceGateway().send_command(

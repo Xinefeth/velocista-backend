@@ -14,7 +14,7 @@ from velocista.interface.rest.builder.router import router as builder_router
 from velocista.interface.rest.catalog.router import router as catalog_router
 from velocista.interface.rest.config.router import router as config_router
 from velocista.interface.rest.devices.router import router as devices_router
-from velocista.interface.rest.errors import register_error_handlers
+from velocista.interface.rest.errors import error_responses, register_error_handlers
 from velocista.interface.rest.events.router import router as events_router
 from velocista.interface.rest.middleware import configure_logging, register_request_logging
 from velocista.interface.rest.optimization.router import router as optimization_router
@@ -63,9 +63,47 @@ async def lifespan(app: FastAPI):
         hub.message_handler = previous
 
 
+API_DESCRIPTION = """
+REST API of the **APAEC Lab** platform: catalog and inventory, robot builder and versions,
+controller setups, run history, competition rules and live robot control.
+
+**Conventions**
+- Base path `/api`. JSON field names are English `snake_case`.
+- Lists are paginated with `limit` and `offset` and return `{items, total, limit, offset}`.
+- Business errors use `{"detail": {"reason": "<stable_code>", "detail": "<readable text>"}}`.
+  Validation errors (HTTP 422 from request parsing) use the FastAPI format.
+- When the server runs with `AUTH_REQUIRED=true`, send `Authorization: Bearer <token>`
+  (get it from `POST /api/auth/login`). `GET /api/health` is always public.
+- Commands to the robot are asynchronous: the API answers HTTP 202 with a `seq`, and the
+  device confirmation arrives through the console WebSocket `/ws/console` as an `ack`.
+"""
+
+OPENAPI_TAGS = [
+    {"name": "health", "description": "Service status."},
+    {"name": "auth", "description": "Login and token check."},
+    {"name": "catalog", "description": "Component types, components and the club inventory."},
+    {"name": "builder", "description": "Robots, slots and immutable robot versions."},
+    {
+        "name": "optimization",
+        "description": "Controllers, setups (saved parameter sets) and presets.",
+    },
+    {"name": "runs", "description": "Run history, laps, notes and ingestion from the simulator."},
+    {"name": "rules", "description": "Competition rule profiles."},
+    {"name": "events", "description": "System log."},
+    {"name": "control", "description": "Operating mode and line color of a robot."},
+    {"name": "devices", "description": "Robot/timer manifest and raw device commands."},
+]
+
+
 def create_app() -> FastAPI:
     configure_logging(settings.log_level)
-    app = FastAPI(title="velocista-backend", version="0.1.0", lifespan=lifespan)
+    app = FastAPI(
+        title="velocista-backend",
+        version="0.1.0",
+        description=API_DESCRIPTION,
+        openapi_tags=OPENAPI_TAGS,
+        lifespan=lifespan,
+    )
     app.middleware("http")(require_authentication)
     app.add_middleware(
         CORSMiddleware,
@@ -77,7 +115,21 @@ def create_app() -> FastAPI:
     register_request_logging(app)
     register_error_handlers(app)
 
-    @app.get("/api/health", tags=["health"], operation_id="getHealth")
+    @app.get(
+        "/api/health",
+        tags=["health"],
+        operation_id="getHealth",
+        summary="Check API, database and device status",
+        description=(
+            "Public endpoint (no token needed). Reports whether the API is up, "
+            "whether PostgreSQL is reachable, the environment name and whether the "
+            "robot and the timer are connected over WebSocket."
+        ),
+        responses=error_responses(
+            {503: "Database is unreachable; the body still lists the status of each part"},
+            plain=[503],
+        ),
+    )
     def health(response: Response) -> dict:
         """Salud de la API, la base de datos y los dispositivos conectados."""
         available = db_available()
@@ -90,7 +142,18 @@ def create_app() -> FastAPI:
             "devices": device_status(),  # {robot, timer}
         }
 
-    @app.get("/api/simulator", tags=["devices"], operation_id="getSimulatorStatus")
+    @app.get(
+        "/api/simulator",
+        tags=["devices"],
+        operation_id="getSimulatorStatus",
+        summary="Get the external simulator connection status",
+        description=(
+            "Returns a snapshot of the connection with the external Velocista simulator. "
+            "When the simulator integration is not enabled the body is "
+            '`{"state": "disabled"}`.'
+        ),
+        responses=error_responses({401: "Missing, expired or tampered token (`unauthorized`)"}),
+    )
     def simulator_status():
         from velocista.infrastructure.realtime.registry import hub
 

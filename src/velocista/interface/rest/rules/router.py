@@ -9,6 +9,7 @@ from velocista.infrastructure.persistence.db import get_session
 from velocista.infrastructure.persistence.repositories.rules_repository import (
     SqlAlchemyRulesRepository,
 )
+from velocista.interface.rest.errors import error_responses
 
 
 class ProfileOut(BaseModel):
@@ -26,12 +27,28 @@ def get_service(session: Annotated[Session, Depends(get_session)]):
 router = APIRouter(prefix="/api/profiles", tags=["rules"])
 
 
-@router.get("", response_model=list[ProfileOut], operation_id="listProfiles")
+@router.get(
+    "",
+    response_model=list[ProfileOut],
+    operation_id="listProfiles",
+    summary="List rule profiles",
+    description=(
+        "Returns the competition profiles (for example Muchik Rumble 4 Senior) "
+        "with their rules stored as data (HU-10)."
+    ),
+)
 def list_profiles(service: Annotated[RulesService, Depends(get_service)]):
     return service.list_profiles()
 
 
-@router.get("/{profile_id}", response_model=ProfileOut, operation_id="getProfile")
+@router.get(
+    "/{profile_id}",
+    response_model=ProfileOut,
+    operation_id="getProfile",
+    summary="Get a rule profile",
+    description="Returns one profile with its rules.",
+    responses=error_responses({404: "Profile does not exist"}),
+)
 def get_profile(
     profile_id: Annotated[str, Path(min_length=1, max_length=40)],
     service: Annotated[RulesService, Depends(get_service)],

@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from velocista.infrastructure.config.settings import settings
 from velocista.infrastructure.security import create_access_token, decode_access_token
+from velocista.interface.rest.errors import error_responses
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -17,7 +18,22 @@ class LoginInput(BaseModel):
     password: str = Field(min_length=1, max_length=1024)
 
 
-@router.post("/login", operation_id="login")
+@router.post(
+    "/login",
+    operation_id="login",
+    summary="Log in and get an access token",
+    description=(
+        "Exchanges the admin username and password for a signed bearer token. "
+        "Send it afterwards as `Authorization: Bearer <token>`. Only needed when "
+        "the server runs with `AUTH_REQUIRED=true`."
+    ),
+    responses=error_responses(
+        {
+            401: "Wrong username or password (`invalid_credentials`)",
+            503: "Server has no valid `SECRET_KEY` (`auth_unconfigured`)",
+        }
+    ),
+)
 def login(data: LoginInput):
     username_ok = hmac.compare_digest(data.username.encode(), settings.admin_username.encode())
     password_ok = hmac.compare_digest(data.password.encode(), settings.admin_password.encode())
@@ -36,7 +52,16 @@ def login(data: LoginInput):
     }
 
 
-@router.get("/me", operation_id="getCurrentUser")
+@router.get(
+    "/me",
+    operation_id="getCurrentUser",
+    summary="Get the authenticated user",
+    description=(
+        "Returns the username stored in the bearer token. Useful to check that a "
+        "saved token is still valid."
+    ),
+    responses=error_responses({401: "Missing, expired or tampered token (`unauthorized`)"}),
+)
 def current_user(request: Request):
     scheme, _, token = request.headers.get("authorization", "").partition(" ")
     try:
