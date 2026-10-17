@@ -99,9 +99,10 @@ class MemoryStore:
         self.items = []
         self.fail = False
         self.attempts = 0
+        self.preflight_args = []
 
-    def preflight(self):
-        pass
+    def preflight(self, setup_id=None, robot_id=None):
+        self.preflight_args.append((setup_id, robot_id))
 
     def recover(self):
         pass
@@ -169,8 +170,20 @@ async def test_server_commands_reconnect_and_persistence_retry():
         await client.start()
         try:
             await until(lambda: client.status == "ready")
-            await client.command("start", {})
+            await client.command("start", {"setup_id": 7}, robot_id="robot-001")
             assert client.state.active == "r1"
+            assert store.preflight_args == [(7, "robot-001")]
+            await until(
+                lambda: any(
+                    item["message"].get("event") == "run_started" for item in store.items
+                )
+            )
+            started = next(
+                item
+                for item in store.items
+                if item["message"].get("event") == "run_started"
+            )
+            assert (started["robot_id"], started["setup_id"]) == ("robot-001", 7)
             await client.command("stop", {})
             assert client.state.active is None
             with pytest.raises(Conflict, match="Rejected"):

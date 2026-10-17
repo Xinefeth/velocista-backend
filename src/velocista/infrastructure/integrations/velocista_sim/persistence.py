@@ -23,11 +23,11 @@ class Store:
         self.settings = settings
         self.factory = factory
 
-    def context(self, session, setup_id=None):
+    def context(self, session, setup_id=None, robot_id=None):
         cfg = self.settings
         robot = (
-            session.get(RobotModel, cfg.sim_internal_robot_id)
-            if cfg.sim_internal_robot_id
+            session.get(RobotModel, robot_id or cfg.sim_internal_robot_id)
+            if (robot_id or cfg.sim_internal_robot_id)
             else None
         )
         selected = setup_id or cfg.sim_setup_id
@@ -49,9 +49,9 @@ class Store:
             )
         return robot, version, setup, profile
 
-    def preflight(self, setup_id=None):
+    def preflight(self, setup_id=None, robot_id=None):
         with self.factory() as session:
-            self.context(session, setup_id)
+            self.context(session, setup_id, robot_id)
 
     def recover(self):
         with self.factory.begin() as session:
@@ -141,7 +141,10 @@ class Store:
         elif kind == "event":
             event = frame["event"]
             if event == "run_started" and run is None:
-                robot, version, setup, profile = self.context(session, item.get("setup_id"))
+                robot, version, setup, profile = self.context(
+                    session, item.get("setup_id"), item.get("robot_id")
+                )
+                acquisition.robot_id = robot.id
                 config = acquisition.config
                 selected_setup_id = setup.id
                 effective = {**config["params"], "base_speed": config["base_speed"]}

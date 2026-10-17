@@ -19,6 +19,7 @@ class Command(BaseModel):
     model_config = ConfigDict(extra="forbid")
     type: str
     data: dict[str, Any] = Field(default_factory=dict)
+    robot_id: str | None = None
 
 
 @router.get("/robot/manifest", operation_id="getRobotManifest")
@@ -32,7 +33,9 @@ def get_manifest():
 @router.post("/{device}/commands", status_code=202, operation_id="sendCommand")
 async def send_command(device: Literal["robot", "timer"], command: Command):
     try:
-        seq = await RealtimeDeviceGateway().send_command(device, command.type, command.data)
+        seq = await RealtimeDeviceGateway().send_command(
+            device, command.type, command.data, robot_id=command.robot_id
+        )
     except DeviceUnavailable as exc:
         return JSONResponse(status_code=503, content={"reason": exc.reason, "detail": exc.detail})
     return {

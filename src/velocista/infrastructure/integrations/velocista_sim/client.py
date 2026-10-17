@@ -34,6 +34,7 @@ class SimulatorClient:
         self.dropped = 0
         self.command_seq = 0
         self.uncertain = False
+        self.run_context = None
 
     @property
     def sid(self):
@@ -75,13 +76,22 @@ class SimulatorClient:
             with contextlib.suppress(asyncio.CancelledError):
                 await self.writer
 
-    def _item(self, frame, run_id=None):
+    def _item(self, frame, run_id=None, *, setup_id=None, robot_id=None):
         return {
             "message": frame,
             "session_id": self.sid,
             "received_at": datetime.now(UTC),
             "lost": self.state.lost + self.dropped,
-            "setup_id": getattr(self.settings, "sim_setup_id", None),
+            "setup_id": (
+                setup_id
+                if setup_id is not None
+                else getattr(self.settings, "sim_setup_id", None)
+            ),
+            "robot_id": (
+                robot_id
+                if robot_id is not None
+                else getattr(self.settings, "sim_internal_robot_id", None)
+            ),
             "run_id": run_id if run_id is not None else self.state.active,
         }
 
@@ -91,7 +101,12 @@ class SimulatorClient:
             self.dropped += 1
             self.last_error = "telemetry_queue_overflow"
             return
-        self.queue.put_nowait(self._item(frame, run_id))
+        context = self.run_context if (run_id or frame.get("event") == "run_started") else None
+        self.queue.put_nowait(
+            self._item(frame, run_id, **(context or {}))
+        )
+        if frame.get("event") == "run_finished":
+            self.run_context = None
 
     async def _writer(self):
         while True:
@@ -229,16 +244,17 @@ class SimulatorClient:
         )
 
     async def command(self, kind, data, robot_id=None):
+        data = dict(data)
+        requested_setup = data.pop("setup_id", None) if kind == "start" else None
         frame = translate(kind, data)
         async with self.lock:
-            if robot_id is not None and robot_id != self.settings.sim_internal_robot_id:
-                raise Conflict("sim_robot_mismatch", "Command targets a different internal robot")
+            selected_robot = robot_id or self.settings.sim_internal_robot_id
             if self.status != "ready" or self.ws is None:
                 raise DeviceUnavailable("sim_disconnected", "External source is not ready")
             if self.uncertain:
                 raise Conflict("command_uncertain", "Reconnect before sending another command")
-            selected_setup = data.get("setup_id") if kind == "setup" else None
-            if selected_setup is not None:
+            selected_setup = data.get("setup_id") if kind == "setup" else requested_setup
+            if selected_setup is not None and kind == "setup":
                 await asyncio.to_thread(self.store.preflight, selected_setup)
             if frame["cmd"] == "start":
                 if self.state.active:
@@ -247,7 +263,9 @@ class SimulatorClient:
                     raise DeviceUnavailable(
                         "persistence_unavailable", "Cannot start without persistence"
                     )
-                await asyncio.to_thread(self.store.preflight)
+                selected_setup = selected_setup or getattr(self.settings, "sim_setup_id", None)
+                await asyncio.to_thread(self.store.preflight, selected_setup, selected_robot)
+                self.run_context = {"setup_id": selected_setup, "robot_id": selected_robot}
             self.command_seq += 1
             seq = self.command_seq
             future = asyncio.get_running_loop().create_future()
