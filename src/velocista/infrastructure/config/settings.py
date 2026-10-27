@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     sim_setup_id: int | None = Field(default=None, ge=1)
     sim_profile_id: str | None = None
     sim_store_telemetry: bool = True
+    # Se guarda 1 de cada N frames (50 Hz / 5 = 10 Hz); la consola en vivo sigue viendo todos.
+    sim_telemetry_stride: int = Field(default=5, ge=1, le=100)
+    sim_max_telemetry_rows_per_run: int = Field(default=20000, ge=1)
     sim_queue_size: int = Field(default=5000, ge=32, le=100000)
     sim_command_timeout: float = Field(default=10, gt=0, le=120)
     sim_reconnect_max_seconds: float = Field(default=30, ge=1, le=300)

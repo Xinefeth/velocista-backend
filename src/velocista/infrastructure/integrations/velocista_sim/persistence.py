@@ -1,8 +1,9 @@
 """Ordered batch persistence; each batch is atomic and safe to retry."""
 
+import logging
 from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 
 from velocista.domain.shared.errors import Conflict
@@ -17,11 +18,15 @@ from velocista.infrastructure.persistence.models.rules import ProfileModel
 from velocista.infrastructure.persistence.models.runs import LapModel, RunModel
 from velocista.infrastructure.persistence.repositories.rules_repository import as_dict
 
+logger = logging.getLogger(__name__)
+
 
 class Store:
     def __init__(self, settings, factory=SessionLocal):
         self.settings = settings
         self.factory = factory
+        # Filas de telemetría ya guardadas por corrida (run.id -> n), para aplicar el tope.
+        self._rows = {}
 
     def context(self, session, setup_id=None, robot_id=None):
         cfg = self.settings
@@ -74,9 +79,57 @@ class Store:
             run.context_snapshot = {**run.context_snapshot, "interruption_reason": reason}
 
     def write(self, batch):
-        with self.factory.begin() as session:
-            for item in batch:
-                self._write(session, item)
+        # Si el lote falla se reintenta completo: los contadores deben volver al estado previo.
+        saved = dict(self._rows)
+        try:
+            with self.factory.begin() as session:
+                for item in batch:
+                    self._write(session, item)
+        except Exception:
+            self._rows = saved
+            raise
+
+    def _store_telemetry(self, session, acquisition, run, frame, now):
+        # Sin corrida abierta (idle a 50 Hz) no se guarda nada; el lote se procesa en orden,
+        # así que run_started ya creó la corrida cuando llegan sus primeros frames.
+        if run is None or run.closed_at is not None:
+            return
+        # Submuestreo por seq: determinista y seguro ante reintentos del lote.
+        if frame["seq"] % self.settings.sim_telemetry_stride:
+            return
+        cap = self.settings.sim_max_telemetry_rows_per_run
+        count = self._rows.get(run.id)
+        if count is None:
+            count = session.scalar(
+                select(func.count())
+                .select_from(ExternalTelemetryModel)
+                .where(ExternalTelemetryModel.run_id == run.id)
+            )
+        if count >= cap:
+            # La corrida, vueltas y eventos siguen igual; solo se deja de insertar telemetría.
+            if "telemetry_capped" not in acquisition.diagnostics:
+                logger.warning("Run %s reached %s telemetry rows; storage stopped", run.id, cap)
+                acquisition.diagnostics = {
+                    **acquisition.diagnostics,
+                    "telemetry_capped": f"run {run.id} reached {cap} rows",
+                }
+            self._rows[run.id] = count
+            return
+        # rowcount no es fiable con ON CONFLICT en este driver (-1); RETURNING sí.
+        inserted = session.scalar(
+            insert(ExternalTelemetryModel)
+            .values(
+                session_id=acquisition.id,
+                seq=frame["seq"],
+                run_id=run.id,
+                t_ms=frame["t_ms"],
+                received_at=now,
+                payload=frame,
+            )
+            .on_conflict_do_nothing()
+            .returning(ExternalTelemetryModel.seq)
+        )
+        self._rows[run.id] = count + (inserted is not None)
 
     def _write(self, session, item):
         frame, now, sid = item["message"], item["received_at"], item["session_id"]
@@ -126,18 +179,7 @@ class Store:
                 changes = run.context_snapshot.get("config_changes", [])
                 run.context_snapshot = {**run.context_snapshot, "config_changes": [*changes, frame]}
         elif kind == "telemetry" and self.settings.sim_store_telemetry:
-            session.execute(
-                insert(ExternalTelemetryModel)
-                .values(
-                    session_id=sid,
-                    seq=frame["seq"],
-                    run_id=run.id if run else None,
-                    t_ms=frame["t_ms"],
-                    received_at=now,
-                    payload=frame,
-                )
-                .on_conflict_do_nothing()
-            )
+            self._store_telemetry(session, acquisition, run, frame, now)
         elif kind == "event":
             event = frame["event"]
             if event == "run_started" and run is None:
