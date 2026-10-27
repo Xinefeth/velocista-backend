@@ -170,6 +170,81 @@ def test_runs_laps_replay_nullable_history_and_restart(external_store):
         assert any(row["optimization_eligible"] for row in results)
 
 
+def test_telemetry_only_for_open_runs_with_stride_and_cap(external_store):
+    import json
+    from pathlib import Path
+
+    store, cfg, factory = external_store
+    cfg.sim_telemetry_stride = 2
+    cfg.sim_max_telemetry_rows_per_run = 3
+    fixtures = Path(__file__).parents[1] / "fixtures/sim_contract/valid"
+
+    def load(group, name):
+        return json.loads((fixtures / group / f"{name}.json").read_text(encoding="utf-8"))[
+            "message"
+        ]
+
+    hello, config = load("hello", "sim-default"), load("config", "pdf-config")
+    sample = load("telemetry", "idle-no-run")
+    sid = "sim:" + hello["session_id"]
+
+    def item(message, run=None):
+        return dict(
+            message=message,
+            session_id=sid,
+            received_at=datetime.now(UTC),
+            lost=0,
+            run_id=run,
+            setup_id=cfg.sim_setup_id,
+        )
+
+    def frame(seq, run=None):
+        return item({**sample, "seq": seq, "run_id": run or False}, run)
+
+    def stored():
+        with factory() as session:
+            return session.scalars(
+                select(ExternalTelemetryModel.seq).order_by(ExternalTelemetryModel.seq)
+            ).all()
+
+    store.write([item(hello), item(config)])
+    # Sin corrida (idle) no se inserta nada.
+    store.write([frame(n) for n in range(6)])
+    assert stored() == []
+    # Los frames llegan en el mismo lote que run_started: no se pierden.
+    start = item({"type": "event", "event": "run_started", "run_id": "r1", "t_ms": 10}, "r1")
+    store.write([start, *[frame(n, "r1") for n in range(6, 12)]])
+    # Stride 2 (seq pares) y tope 3: 6, 8, 10 entran; el resto no.
+    assert stored() == [6, 8, 10]
+    # El tope se mantiene entre lotes y se deja un diagnóstico, sin romper vueltas ni cierre.
+    lap = item({"type": "event", "event": "lap", "lap": 1, "lap_ms": 1000}, "r1")
+    store.write([*[frame(n, "r1") for n in range(12, 20)], lap])
+    assert stored() == [6, 8, 10]
+    summary = dict(
+        laps=1,
+        best_lap_ms=1000,
+        avg_lap_ms=1000,
+        off_tracks=0,
+        track_id=config["track_id"],
+        config_changed=False,
+        config={key: config[key] for key in ("controller", "params", "base_speed")},
+    )
+    store.write(
+        [item({"type": "event", "event": "run_finished", "summary": summary, "t_ms": 99}, "r1")]
+    )
+    # Tras run_finished vuelve a no guardarse nada.
+    store.write([frame(n) for n in range(20, 24)])
+    assert stored() == [6, 8, 10]
+    with factory() as session:
+        run = session.scalar(select(RunModel))
+        assert run.closure_status == "finished"
+        assert run.context_snapshot["summary"] == summary
+        assert session.scalar(select(func.count()).select_from(LapModel)) == 1
+        assert (
+            "telemetry_capped" in session.get(models.external.ExternalSessionModel, sid).diagnostics
+        )
+
+
 @pytest.mark.skipif(os.getenv("SIM_LIVE_TEST") != "1", reason="Opt-in deployed WebSocket test")
 @pytest.mark.asyncio
 async def test_deployed_simulator_with_postgres(external_store):
