@@ -45,7 +45,7 @@ def test_alembic_upgrade_and_empty_downgrade():
             connection.execute(text(f'SET LOCAL search_path TO "{schema}"'))
             config.attributes["connection"] = connection
             command.upgrade(config, "head")
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0005"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0007"
             command.downgrade(config, "0004")
             command.upgrade(config, "head")
         finally:

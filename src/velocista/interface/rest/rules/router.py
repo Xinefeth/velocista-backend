@@ -34,7 +34,13 @@ router = APIRouter(prefix="/api/profiles", tags=["rules"])
     summary="List rule profiles",
     description=(
         "Returns the competition profiles (for example Muchik Rumble 4 Senior) "
-        "with their rules stored as data (HU-10)."
+        "with their rules stored as data (HU-10). A profile may carry track rules in "
+        "`rules.track` (EN-28): `line_width_mm` in millimetres, `gap_length_cm` in centimetres "
+        "and 13 rules shaped `{enabled, value}`; every length rule (`radius_min`, "
+        "`separation_min`, `margin`, `zone_distance`, `length_min`, `length_max`, "
+        "`straight_min`, `straight_max`) is in centimetres, `angle_min` in degrees, `cross_max` "
+        "and `gap_max` are counts, `no_sharp` and `closed` are booleans. Profiles without a "
+        "`track` block define no track rules. The profile API is read-only."
     ),
 )
 def list_profiles(service: Annotated[RulesService, Depends(get_service)]):
@@ -46,7 +52,10 @@ def list_profiles(service: Annotated[RulesService, Depends(get_service)]):
     response_model=ProfileOut,
     operation_id="getProfile",
     summary="Get a rule profile",
-    description="Returns one profile with its rules.",
+    description=(
+        "Returns one profile with its rules, including `rules.track` when present "
+        "(lengths in centimetres, `angle_min` in degrees, `line_width_mm` in millimetres)."
+    ),
     responses=error_responses({404: "Profile does not exist"}),
 )
 def get_profile(

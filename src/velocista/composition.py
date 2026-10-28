@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from velocista.application.builder.use_cases import BuilderService
 from velocista.application.catalog.use_cases import CatalogService
 from velocista.application.config.ports import ConfigRepository, DeviceGateway
+from velocista.application.tracks.use_cases import TracksService
 from velocista.infrastructure.persistence.db import get_session
 from velocista.infrastructure.persistence.repositories.builder_repository import (
     SqlAlchemyBuilderRepository,
@@ -24,6 +25,9 @@ from velocista.infrastructure.persistence.repositories.catalog_repository import
 )
 from velocista.infrastructure.persistence.repositories.config_repository import (
     SqlAlchemyConfigRepository,
+)
+from velocista.infrastructure.persistence.repositories.tracks_repository import (
+    SqlAlchemyTracksRepository,
 )
 from velocista.infrastructure.realtime.device_gateway import RealtimeDeviceGateway
 from velocista.infrastructure.realtime.robot_activity import RealtimeRobotActivity
@@ -42,6 +46,10 @@ def get_builder_service(session: DbSession) -> BuilderService:
         activity=RealtimeRobotActivity(session),
     )
     return BuilderService(repo)
+
+
+def get_tracks_service(session: DbSession) -> TracksService:
+    return TracksService(SqlAlchemyTracksRepository(session))
 
 
 def get_config_repository(session: DbSession) -> ConfigRepository:

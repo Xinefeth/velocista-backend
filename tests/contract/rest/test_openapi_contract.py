@@ -51,6 +51,12 @@ EXPECTED_ENDPOINTS = {
     ("GET", "/api/robots/{robot_id}/mode-line"),
     ("POST", "/api/robots/{robot_id}/mode-line/mode"),
     ("POST", "/api/robots/{robot_id}/mode-line/line"),
+    ("GET", "/api/tracks"),
+    ("POST", "/api/tracks"),
+    ("GET", "/api/tracks/{track_id}"),
+    ("PUT", "/api/tracks/{track_id}"),
+    ("DELETE", "/api/tracks/{track_id}"),
+    ("GET", "/api/tracks/{track_id}/export"),
     ("GET", "/api/devices/robot/manifest"),
     ("POST", "/api/devices/{device}/commands"),
 }
@@ -130,3 +136,37 @@ def test_run_schema_exposes_traceability_and_score(spec):
 def test_ingestion_requires_idempotency_key_and_laps(spec):
     required = set(spec["components"]["schemas"]["RunIngestion"]["required"])
     assert {"external_run_id", "laps", "robot_id", "version_id", "setup_id"} <= required
+
+
+def test_track_schema_exposes_agreed_fields(spec):
+    schemas = spec["components"]["schemas"]
+    assert set(schemas["TrackOut"]["properties"]) == {
+        "id",
+        "name",
+        "board",
+        "closed",
+        "points",
+        "zones",
+        "start",
+        "profile_id",
+        "length_cm",
+        "created_at",
+        "updated_at",
+    }
+    assert set(schemas["BoardIO"]["properties"]) == {"width_cm", "height_cm"}
+    assert set(schemas["PointIO"]["properties"]) == {"x", "y", "radius", "gap"}
+    assert set(schemas["ZoneIO"]["properties"]) == {"x", "y", "width", "height", "name"}
+    assert set(schemas["StartIO"]["properties"]) == {"edge", "t"}
+    assert {"name", "board", "closed", "points", "length_cm"} <= set(schemas["TrackIn"]["required"])
+
+
+def test_track_operations_use_the_agreed_ids(operations):
+    ids = {op["operationId"] for method, path, op in operations if path.startswith("/api/tracks")}
+    assert ids == {
+        "listTracks",
+        "getTrack",
+        "createTrack",
+        "updateTrack",
+        "deleteTrack",
+        "exportTrack",
+    }
