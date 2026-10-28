@@ -136,6 +136,13 @@ El frontend consume hoy solo estas dos (hardcodeadas en `domain/strip.ts` y `dom
 - **Field:** `key` (clave) · `label` (etiqueta) · `type` (tipo: `number`/`text`) · `unit` (unidad) · `required` (obligatorio)
 - **Capability:** `key` (clave) · `unit` (unidad) · `aggregation` (agregacion) · `field` (campo) · `fields` (campos) · `operation` (operacion) · `min` · `max`
 
+**Track (pista del trazador, EN-28) — `/api/tracks`:** todas las distancias en **centímetros**.
+`id` (entero) · `name` · `board` `{ width_cm, height_cm }` · `closed` · `points` `{ x, y, radius, gap }` · `zones` `{ x, y, width, height, name }` · `start` `{ edge, t }` (`edge` = índice de tramo; `t` = fracción 0..1) · `profile_id` (nullable) · `length_cm` (lo calcula el frontend; el backend lo guarda tal cual) · `created_at` · `updated_at`.
+- Rutas: `GET /api/tracks` (paginada) · `POST /api/tracks` (crea; también importa un JSON exportado e ignora `id`, `created_at`, `updated_at`) · `GET|PUT|DELETE /api/tracks/{id}` · `GET /api/tracks/{id}/export` (JSON con `Content-Disposition: attachment`).
+- Límites *(supuestos pendientes del PO)*: nombre 1–80; puntos 2–500; zonas 0–100; tablero 50–2000 cm por lado; radio 0–200 cm; coordenadas ±10000 cm (pueden quedar fuera del tablero); zona `width`/`height` > 0 y ≤ 2000, nombre ≤ 80; `length_cm` > 0 y ≤ 100000; `start.edge` 0..(puntos−1) si `closed`, 0..(puntos−2) si abierta; `closed` exige ≥ 3 puntos.
+- Errores: parseo de Pydantic → 422 con `detail` **lista** `[{type, loc, msg, input, ctx?}]`; regla de dominio → 422 con `detail` **objeto** `{reason, detail}`. Razones: `track_not_found` (404), `track_profile_unknown`, `track_name_invalid`, `track_points_count`, `track_zones_count`, `track_board_size`, `track_radius_range`, `track_coordinate_range`, `track_zone_size`, `track_zone_name`, `track_not_finite`, `track_length_invalid`, `track_start_invalid`, `track_closed_needs_three_points`.
+- Reglas de pista en perfiles: `GET /api/profiles` devuelve `rules.track` cuando existe (`lgr2026`, `libre`): `line_width_mm` (mm), `gap_length_cm` (cm) y 13 reglas `{ enabled, value }`: `radius_min`, `angle_min` (grados), `no_sharp`, `separation_min`, `margin`, `zone_distance`, `closed`, `length_min`, `length_max`, `straight_min`, `straight_max`, `cross_max`, `gap_max` (todas las longitudes en cm). Los perfiles `club`, `mr4a`, `mr4s`, `mr4m` no traen bloque `track`.
+
 ### Query params (ya en inglés)
 
 `limit` (renombrar `limite` donde quede) · `offset` · `q` · `type_id` · `robot_id` · `version_id` · `controller_id` · `source`

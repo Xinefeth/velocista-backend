@@ -20,6 +20,7 @@ from velocista.interface.rest.middleware import configure_logging, register_requ
 from velocista.interface.rest.optimization.router import router as optimization_router
 from velocista.interface.rest.rules.router import router as rules_router
 from velocista.interface.rest.runs.router import router as runs_router
+from velocista.interface.rest.tracks.router import router as tracks_router
 from velocista.interface.websocket.gateway import router as websocket_router
 
 # Routers de cada contexto. Se van sumando a medida que se portan desde el backend anterior.
@@ -32,6 +33,7 @@ MODULE_ROUTERS = [
     rules_router,
     optimization_router,
     runs_router,
+    tracks_router,
     devices_router,
     websocket_router,
 ]
@@ -89,6 +91,10 @@ OPENAPI_TAGS = [
     },
     {"name": "runs", "description": "Run history, laps, notes and ingestion from the simulator."},
     {"name": "rules", "description": "Competition rule profiles."},
+    {
+        "name": "tracks",
+        "description": "Saved tracks of the track drawing tool (distances in centimetres).",
+    },
     {"name": "events", "description": "System log."},
     {"name": "control", "description": "Operating mode and line color of a robot."},
     {"name": "devices", "description": "Robot/timer manifest and raw device commands."},

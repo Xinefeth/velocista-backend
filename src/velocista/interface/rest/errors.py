@@ -9,9 +9,12 @@ Mapea el TIPO de error de dominio a un código HTTP (el dominio no conoce HTTP).
 
 import logging
 from collections.abc import Iterable
+from math import isfinite
 from typing import Any
 
 from fastapi import FastAPI, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.exc import IntegrityError, OperationalError
@@ -91,7 +94,26 @@ def _response(status: int, reason: str, detail: str) -> JSONResponse:
     )
 
 
+def _json_safe(value: Any) -> Any:
+    """Cambia NaN/Infinity por texto: el JSON estándar no los admite y la respuesta fallaría."""
+    if isinstance(value, float) and not isfinite(value):
+        return "NaN" if value != value else ("Infinity" if value > 0 else "-Infinity")
+    if isinstance(value, dict):
+        return {key: _json_safe(item) for key, item in value.items()}
+    if isinstance(value, list | tuple):
+        return [_json_safe(item) for item in value]
+    return value
+
+
 def register_error_handlers(app: FastAPI) -> None:
+    @app.exception_handler(RequestValidationError)
+    async def _parsing(_: Request, e: RequestValidationError) -> JSONResponse:
+        # Mismo formato de FastAPI ({"detail": [ {type, loc, msg, input, ...} ]}). Solo se evita que
+        # un `input` NaN/Infinity rompa la serialización y convierta el 422 en un 500.
+        return JSONResponse(
+            status_code=422, content={"detail": _json_safe(jsonable_encoder(e.errors()))}
+        )
+
     @app.exception_handler(DomainError)
     async def _domain(_: Request, e: DomainError) -> JSONResponse:
         return _response(_status_for(e), e.reason, e.detail)

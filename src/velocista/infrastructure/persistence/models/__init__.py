@@ -9,6 +9,7 @@ from velocista.infrastructure.persistence.models import (
     optimization,  # noqa: F401
     rules,  # noqa: F401
     runs,  # noqa: F401
+    tracks,  # noqa: F401
 )
 from velocista.infrastructure.persistence.models.builder import (  # noqa: F401
     RobotModel,
