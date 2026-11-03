@@ -16,6 +16,7 @@ from velocista.interface.rest.config.router import router as config_router
 from velocista.interface.rest.devices.router import router as devices_router
 from velocista.interface.rest.errors import error_responses, register_error_handlers
 from velocista.interface.rest.events.router import router as events_router
+from velocista.interface.rest.measurements.router import router as measurements_router
 from velocista.interface.rest.middleware import configure_logging, register_request_logging
 from velocista.interface.rest.optimization.router import router as optimization_router
 from velocista.interface.rest.rules.router import router as rules_router
@@ -34,6 +35,7 @@ MODULE_ROUTERS = [
     optimization_router,
     runs_router,
     tracks_router,
+    measurements_router,
     devices_router,
     websocket_router,
 ]
@@ -94,6 +96,22 @@ OPENAPI_TAGS = [
     {
         "name": "tracks",
         "description": "Saved tracks of the track drawing tool (distances in centimetres).",
+    },
+    {
+        "name": "measurements",
+        "description": (
+            "Measuring a place with the phone (steps, GPS or car + phone): ingestion of "
+            "readings, perimeter, area and closure error (distances in metres)."
+        ),
+    },
+    {
+        "name": "calibration",
+        "description": "Gyroscope bias, step length and car speed calibration of each phone.",
+    },
+    {"name": "gps", "description": "GPS error against taped distances (SP-06)."},
+    {
+        "name": "precision-model",
+        "description": "Model that re-tunes the measurement parameters (SP-07).",
     },
     {"name": "events", "description": "System log."},
     {"name": "control", "description": "Operating mode and line color of a robot."},
