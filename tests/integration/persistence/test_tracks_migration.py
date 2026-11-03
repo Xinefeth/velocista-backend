@@ -11,6 +11,9 @@ from sqlalchemy import text
 
 from velocista.infrastructure.persistence.db import engine
 
+# Se sube hasta la última migración de pistas (no "head"), así las migraciones nuevas de otros
+# contextos (p. ej. 0008 de mediciones) no rompen esta prueba.
+TRACKS_HEAD = "0007"
 ROOT = Path(__file__).parents[3]
 RULES = (
     "radius_min angle_min no_sharp separation_min margin zone_distance closed length_min "
@@ -47,7 +50,7 @@ def table_exists(connection, name):
 
 def test_upgrade_head_creates_track_table_and_seeds_two_profiles(migrated):
     connection, config = migrated
-    command.upgrade(config, "head")
+    command.upgrade(config, TRACKS_HEAD)
     assert version(connection) == "0007"
     assert table_exists(connection, "track")
     rules = dict(connection.execute(text("SELECT id, rules FROM profile")).all())
@@ -67,7 +70,7 @@ def test_upgrade_head_creates_track_table_and_seeds_two_profiles(migrated):
 
 def test_existing_profiles_have_no_track_block_after_upgrade(migrated):
     connection, config = migrated
-    command.upgrade(config, "head")
+    command.upgrade(config, TRACKS_HEAD)
     others = connection.execute(
         text("SELECT id, rules FROM profile WHERE id NOT IN ('lgr2026', 'libre')")
     ).all()
@@ -77,14 +80,14 @@ def test_existing_profiles_have_no_track_block_after_upgrade(migrated):
 
 def test_downgrade_to_0005_removes_track_table_and_seeded_profiles(migrated):
     connection, config = migrated
-    command.upgrade(config, "head")
+    command.upgrade(config, TRACKS_HEAD)
     command.downgrade(config, "0005")
     assert version(connection) == "0005"
     assert not table_exists(connection, "track")
     ids = {row.id for row in connection.execute(text("SELECT id FROM profile"))}
     assert ids.isdisjoint({"lgr2026", "libre"})
     assert {"club", "mr4a"} <= ids
-    command.upgrade(config, "head")  # y vuelve a subir
+    command.upgrade(config, TRACKS_HEAD)  # y vuelve a subir
     assert version(connection) == "0007"
 
 
@@ -104,7 +107,7 @@ def insert_track(connection, profile_id=None):
 
 def test_downgrade_refuses_while_tracks_exist(migrated):
     connection, config = migrated
-    command.upgrade(config, "head")
+    command.upgrade(config, TRACKS_HEAD)
     insert_track(connection)
     with pytest.raises(RuntimeError, match="Export/remove saved tracks"):
         command.downgrade(config, "0005")
@@ -112,7 +115,7 @@ def test_downgrade_refuses_while_tracks_exist(migrated):
 
 def test_downgrade_0007_refuses_while_a_track_uses_a_seeded_profile(migrated):
     connection, config = migrated
-    command.upgrade(config, "head")
+    command.upgrade(config, TRACKS_HEAD)
     insert_track(connection, profile_id="lgr2026")
     with pytest.raises(RuntimeError, match="lgr2026/libre"):
         command.downgrade(config, "0006")
