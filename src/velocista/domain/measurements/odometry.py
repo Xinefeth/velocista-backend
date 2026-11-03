@@ -99,6 +99,50 @@ def detect_steps(motion: Sequence[Reading], cal: Calibration) -> list[int]:
     return steps
 
 
+# Umbral que se adapta a cómo pisa cada persona (se aprende al calibrar el paso).
+THRESHOLD_RANGE = (0.5, 3.0)  # nunca tan bajo que cuente el temblor, ni tan alto que pierda pasos
+THRESHOLD_SHARE = 0.5  # el umbral es la mitad del golpe típico de un paso
+MIN_PEAK_MS2 = 0.3  # golpes más chicos son temblor de la mano, no pasos
+MIN_PEAKS = 6
+
+
+def step_peaks(motion: Sequence[Reading], min_gap_ms: int = 300) -> list[float]:
+    """Altura de cada golpe de paso (|a| − g suavizado), uno por cada 300 ms como máximo."""
+    samples = [(r.t_ms, hypot(*r.accel) - GRAVITY_MS2) for r in motion if r.accel is not None]
+    smooth: list[tuple[int, float]] = []
+    window: list[float] = []
+    for t, value in samples:
+        window.append(value)
+        if len(window) > 3:
+            window.pop(0)
+        smooth.append((t, sum(window) / len(window)))
+    peaks: list[tuple[int, float]] = []
+    for i in range(1, len(smooth) - 1):
+        t, v = smooth[i]
+        if v < MIN_PEAK_MS2 or not (v >= smooth[i - 1][1] and v > smooth[i + 1][1]):
+            continue
+        if peaks and t - peaks[-1][0] < min_gap_ms:
+            if v > peaks[-1][1]:  # dos picos del mismo paso: se queda el más alto
+                peaks[-1] = (t, v)
+            continue
+        peaks.append((t, v))
+    return [v for _, v in peaks]
+
+
+def adaptive_threshold(walks: Sequence[Sequence[Reading]]) -> float | None:
+    """Umbral de paso a la medida de la persona: la mitad de su golpe típico (mediana).
+
+    Quien pisa suave tiene golpes bajos y con el umbral fijo (1,2) se perdían pasos; quien pisa
+    fuerte lo sube y no cuenta el temblor. None si hay muy pocos pasos para aprender.
+    """
+    peaks = sorted(v for walk in walks for v in step_peaks(motion_readings(walk)))
+    if len(peaks) < MIN_PEAKS:
+        return None
+    typical = peaks[len(peaks) // 2]
+    low, high = THRESHOLD_RANGE
+    return min(high, max(low, typical * THRESHOLD_SHARE))
+
+
 def step_segments(motion: Sequence[Reading], cal: Calibration) -> list[Segment]:
     """Un tramo por paso: largo del paso calibrado y rumbo del giroscopio en ese instante."""
     length = cal.step_length_m or 0.0

@@ -47,6 +47,7 @@ def walk_readings(
     mark_corners: bool = True,
     still_s: float = 1.0,
     seed: int = 1,
+    step_accel: float = 3.0,  # fuerza del golpe de cada paso (m/s²); suave ~1, fuerte ~5
 ) -> list[Reading]:
     rng = random.Random(seed)
     out: list[Reading] = []
@@ -59,7 +60,7 @@ def walk_readings(
         nonlocal t, phase
         if walking:
             phase += 2 * pi * cadence_hz * dt / 1000
-        mag = GRAVITY_MS2 + (3.0 * sin(phase) if walking else 0.0) + rng.gauss(0, 0.05)
+        mag = GRAVITY_MS2 + (step_accel * sin(phase) if walking else 0.0) + rng.gauss(0, 0.05)
         gz = rate_dps + gyro_bias_dps + (rng.gauss(0, gyro_noise_dps) if gyro_noise_dps else 0.0)
         out.append(Reading(len(out), int(t), "motion", gyro_z_dps=gz, accel=(0.0, 0.0, mag)))
         t += dt

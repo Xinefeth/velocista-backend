@@ -256,3 +256,26 @@ class TestPrecisionModel:
             "/api/precision-model/runs", json={"measurement_ids": [999998, 999999]}
         )
         assert response.status_code == 404
+
+
+class TestAdaptiveStepThreshold:
+    def test_soft_walker_is_learned_and_measured(self, client):
+        # pisa suave: con la regla fija (1,2) casi no se contaban sus pasos
+        trials = [
+            {
+                "distance_m": 32,
+                "readings": [reading_json(r) for r in walk_readings(step_accel=1.0, seed=s)],
+            }
+            for s in range(3)
+        ]
+        response = client.post(f"{CALIBRATIONS}/soft-phone/step", json={"trials": trials})
+        assert response.status_code == 201, response.text
+        params = response.json()["params"]
+        assert params["step_threshold_ms2"] < 1.2
+        assert params["step_length_m"] == pytest.approx(0.70, abs=0.02)
+
+        m = start(client, device="soft-phone")
+        assert m["calibration"]["step_threshold_ms2"] == pytest.approx(params["step_threshold_ms2"])
+        send(client, m["id"], walk_readings(step_accel=1.0, gyro_noise_dps=0.3, seed=9))
+        result = client.post(f"{MEASUREMENTS}/{m['id']}/finish").json()["result"]
+        assert abs(result["perimeter_error_pct"]) < 3

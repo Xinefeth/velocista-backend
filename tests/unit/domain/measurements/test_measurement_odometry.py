@@ -7,7 +7,9 @@ import pytest
 from support.measurement_fixtures import walk_readings
 from velocista.domain.measurements.entities import XY, Calibration, Reading
 from velocista.domain.measurements.odometry import (
+    THRESHOLD_RANGE,
     Segment,
+    adaptive_threshold,
     build_path,
     car_segments,
     correct_heading_drift,
@@ -91,3 +93,22 @@ def test_heading_is_exact_with_irregular_intervals():
         for i in range(1, len(times))
     ]
     assert heading_series(motion, 0.0)[-1][1] == pytest.approx(2 * pi)
+
+
+def test_fixed_threshold_misses_soft_steps():
+    soft = motion_readings(walk_readings(step_accel=1.0))
+    assert len(detect_steps(soft, Calibration())) < 10  # con la regla fija casi no cuenta
+
+
+@pytest.mark.parametrize("accel", [1.0, 3.0, 5.0])
+def test_adaptive_threshold_counts_soft_and_strong_walkers(accel):
+    walk = walk_readings(step_accel=accel)
+    threshold = adaptive_threshold([walk])
+    assert THRESHOLD_RANGE[0] <= threshold <= THRESHOLD_RANGE[1]
+    steps = detect_steps(motion_readings(walk), Calibration(step_threshold_ms2=threshold))
+    assert len(steps) == pytest.approx(46, abs=1)  # 32 m / 0.7 m
+
+
+def test_adaptive_threshold_needs_enough_steps():
+    still = [Reading(i, i * 20, "motion", gyro_z_dps=0, accel=(0, 0, 9.81)) for i in range(300)]
+    assert adaptive_threshold([still]) is None

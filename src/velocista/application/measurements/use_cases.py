@@ -28,7 +28,11 @@ from velocista.domain.measurements.entities import (
     ModelRun,
     Reading,
 )
-from velocista.domain.measurements.odometry import detect_steps, motion_readings
+from velocista.domain.measurements.odometry import (
+    adaptive_threshold,
+    detect_steps,
+    motion_readings,
+)
 from velocista.domain.measurements.tuning import DEFAULT_ATTEMPTS, tune
 from velocista.domain.measurements.validation import (
     PLACE_MAX,
@@ -48,6 +52,8 @@ def snapshot(records: dict[str, CalibrationRecord]) -> Calibration:
         c = replace(c, gyro_bias_dps=g.params["bias_dps"], gyro_calibrated=True)
     if s := records.get("step_length"):
         c = replace(c, step_length_m=s.params["step_length_m"])
+        if s.params.get("step_threshold_ms2"):
+            c = replace(c, step_threshold_ms2=s.params["step_threshold_ms2"])
     if v := records.get("car_speed"):
         c = replace(c, speed_k=v.params["k"], speed_c=v.params["c"])
     return c
@@ -157,10 +163,14 @@ class CalibrationService:
         Con lecturas, el backend cuenta los pasos con el MISMO detector que usará al medir: así
         un error del detector se compensa en el largo del paso.
         """
+        # Con lecturas se aprende también el umbral de paso de esta persona (cómo pisa).
+        walks = [readings for _, steps, readings in trials if steps is None and readings]
+        threshold = adaptive_threshold(walks) if walks else None
+        detector = Calibration(step_threshold_ms2=threshold) if threshold else Calibration()
         counted = []
         for distance, steps, readings in trials:
             if steps is None:
-                steps = len(detect_steps(motion_readings(readings or []), Calibration()))
+                steps = len(detect_steps(motion_readings(readings or []), detector))
             counted.append((distance, steps))
         c = cal_mod.step_length(counted)
         params = {
@@ -170,6 +180,8 @@ class CalibrationService:
             "spread_m": c.spread_m,
             "warnings": list(c.warnings),
         }
+        if threshold:
+            params["step_threshold_ms2"] = threshold
         return self.repository.add_calibration(CalibrationRecord(device_id, "step_length", params))
 
     def car(
@@ -253,7 +265,11 @@ class PrecisionModelService:
                     CalibrationRecord(
                         device_id,
                         "step_length",
-                        {"step_length_m": params["step_length_m"]},
+                        {
+                            "step_length_m": params["step_length_m"],
+                            # el modelo ajusta el largo; se conserva el umbral aprendido
+                            "step_threshold_ms2": samples[0][0].calibration.step_threshold_ms2,
+                        },
                         origin="model",
                     )
                 )
