@@ -29,20 +29,25 @@ def motion_readings(readings: Sequence[Reading]) -> list[Reading]:
 
 
 def heading_series(motion: Sequence[Reading], bias_dps: float) -> list[tuple[int, float]]:
-    """Integra el giroscopio (regla del trapecio) restando el sesgo calibrado. Rumbo inicial 0."""
+    """Integra el giro restando el sesgo calibrado. Rumbo inicial 0.
+
+    Cada lectura cubre el intervalo desde la anterior (giro = velocidad × su intervalo). No se usa
+    la regla del trapecio: el celular envía el giro como cambio de orientación ÷ intervalo, con
+    intervalos irregulares (1 a 100 ms), y promediar lecturas vecinas sumaba hasta 35° de más
+    por vuelta.
+    """
     out: list[tuple[int, float]] = []
     heading = 0.0
     prev_t: int | None = None
-    prev_rate: float | None = None
     for r in motion:
         if r.gyro_z_dps is None:
             continue
         rate = r.gyro_z_dps - bias_dps
-        if prev_t is not None and prev_rate is not None:
+        if prev_t is not None:
             dt = min(r.t_ms - prev_t, MAX_GAP_MS) / 1000
-            heading += radians((prev_rate + rate) / 2) * dt
+            heading += radians(rate) * dt
         out.append((r.t_ms, heading))
-        prev_t, prev_rate = r.t_ms, rate
+        prev_t = r.t_ms
     return out
 
 

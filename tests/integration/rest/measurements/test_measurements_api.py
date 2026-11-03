@@ -97,9 +97,17 @@ class TestCalibration:
 
 
 class TestMeasurementFlow:
-    def test_steps_without_calibration_is_rejected(self, client):
+    def test_steps_without_calibration_can_start(self, client):
         response = client.post(
             MEASUREMENTS, json={"method": "steps", "place_name": "Aula", "device_id": "x"}
+        )
+        assert response.status_code == 201
+        assert response.json()["calibration"]["step_length_m"] is None
+
+    def test_car_without_calibration_is_rejected(self, client):
+        response = client.post(
+            MEASUREMENTS,
+            json={"method": "car", "mount": "robot", "place_name": "Pista", "device_id": "x"},
         )
         assert response.status_code == 422
         assert response.json()["detail"]["reason"] == "measurement_not_calibrated"

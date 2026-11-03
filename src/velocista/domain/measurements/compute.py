@@ -15,6 +15,7 @@ Pasos del cálculo (todos en metros):
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import replace
 from math import degrees
 from statistics import median
 
@@ -33,6 +34,7 @@ from velocista.domain.measurements.quality import quality_for
 from velocista.domain.shared.errors import Validation
 
 MIN_SEGMENTS = 4
+DEFAULT_STEP_M = 0.70  # paso promedio de un adulto, si el celular no calibró el suyo
 MAX_PATH_POINTS = 1000
 GPS_TARGET_PCT = 10.0  # error del GPS aceptable frente al tamaño del lugar
 
@@ -64,9 +66,12 @@ def _scale_about(points: Sequence[XY], origin: XY, f: float) -> list[XY]:
 def _odometry_paths(m: Measurement, readings: Sequence[Reading]):
     motion = odo.motion_readings(readings)
     cal = m.calibration
+    default_step = False
     if m.method == "steps":
         if not cal.step_length_m:
-            raise Validation("measurement_not_calibrated", "Calibrate the step length first")
+            # Sin calibrar se usa un paso promedio; el lado medido o el modelo (SP-07) lo corrigen.
+            cal = replace(cal, step_length_m=DEFAULT_STEP_M)
+            default_step = True
         segments = odo.step_segments(motion, cal)
     else:
         if cal.speed_k is None:
@@ -79,7 +84,7 @@ def _odometry_paths(m: Measurement, readings: Sequence[Reading]):
         )
     raw = odo.build_path(segments)
     times = [s.t_ms for s in segments]
-    warnings: list[str] = []
+    warnings: list[str] = ["step_not_calibrated"] if default_step else []
     drift_deg = None
     corrected = raw
     if m.closed:

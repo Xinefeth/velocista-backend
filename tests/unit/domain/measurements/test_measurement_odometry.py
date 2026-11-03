@@ -72,3 +72,22 @@ def test_car_segments_use_speed_model():
     motion = [Reading(i, i * 100, "motion", gyro_z_dps=0, pwm=50) for i in range(11)]
     total = sum(s.length_m for s in car_segments(motion, cal))
     assert total == pytest.approx((0.01 * 50 + 0.1) * 1.0)
+
+
+def test_heading_is_exact_with_irregular_intervals():
+    # el celular manda giro = cambio de orientación ÷ intervalo, con intervalos de 1 a 98 ms
+    times, t = [0], 0
+    for i in range(400):
+        t += [1, 16, 33, 98][i % 4]
+        times.append(t)
+    yaw = [360 * k / (len(times) - 1) for k in range(len(times))]  # una vuelta completa
+    motion = [Reading(0, times[0], "motion", gyro_z_dps=0.0)] + [
+        Reading(
+            i,
+            times[i],
+            "motion",
+            gyro_z_dps=(yaw[i] - yaw[i - 1]) / ((times[i] - times[i - 1]) / 1000),
+        )
+        for i in range(1, len(times))
+    ]
+    assert heading_series(motion, 0.0)[-1][1] == pytest.approx(2 * pi)

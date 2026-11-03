@@ -62,11 +62,7 @@ class MeasurementsService:
         m = replace(m, place_name=m.place_name.strip())
         validate_measurement(m)
         cal = snapshot(self.repository.latest_calibrations(m.device_id))
-        if m.method == "steps" and not cal.step_length_m:
-            raise Validation(
-                "measurement_not_calibrated",
-                "Calibrate the step length before measuring",
-            )
+        # Por pasos se puede medir sin calibrar el paso: se usa uno promedio y se avisa.
         if m.method == "car" and cal.speed_k is None:
             raise Validation("measurement_not_calibrated", "Calibrate the car speed first")
         m = replace(m, calibration=cal, status="recording", result=None)

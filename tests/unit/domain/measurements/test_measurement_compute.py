@@ -88,9 +88,16 @@ def test_gps_small_room_warns_to_use_steps():
     assert "gps_space_too_small" in r.warnings
 
 
-def test_steps_without_step_length_is_rejected():
+def test_steps_without_step_length_use_average_step_and_warn():
+    # el simulador camina con paso 0.70, igual al paso promedio por defecto
+    r = compute_result(measurement(step_length_m=None), walk_readings())
+    assert "step_not_calibrated" in r.warnings
+    assert abs(r.perimeter_error_pct) < 3
+
+
+def test_car_without_speed_calibration_is_rejected():
     with pytest.raises(Validation) as e:
-        compute_result(measurement(step_length_m=None), walk_readings())
+        compute_result(measurement("car", step_length_m=None), walk_readings())
     assert e.value.reason == "measurement_not_calibrated"
 
 
