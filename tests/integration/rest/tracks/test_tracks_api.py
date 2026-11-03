@@ -28,6 +28,8 @@ class TestCreateAndRead:
             "start",
             "profile_id",
             "length_cm",
+            "perimeter_cm",
+            "area_cm2",
             "created_at",
             "updated_at",
         }
@@ -189,3 +191,44 @@ class TestAuthentication:
         headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
         assert protected.get(TRACKS, headers=headers).status_code == 200
         assert protected.post(TRACKS, json=track_payload(), headers=headers).status_code == 201
+
+
+class TestPerimeterAndArea:
+    """EN-28: perimeter_cm / area_cm2 are stored as sent, null by default, and exported."""
+
+    def test_create_stores_and_returns_perimeter_and_area(self, client):
+        track = create(client, perimeter_cm=700.5, area_cm2=36500.25)
+        loaded = client.get(f"{TRACKS}/{track['id']}").json()
+        assert (loaded["perimeter_cm"], loaded["area_cm2"]) == (700.5, 36500.25)
+
+    def test_create_without_them_returns_null(self, client):
+        track = create(client)
+        assert (track["perimeter_cm"], track["area_cm2"]) == (None, None)
+
+    def test_create_with_explicit_null_for_a_crossing_track(self, client):
+        track = create(client, perimeter_cm=700.5, area_cm2=None)
+        assert (track["perimeter_cm"], track["area_cm2"]) == (700.5, None)
+
+    def test_open_track_accepts_null_metrics(self, client):
+        track = create(client, closed=False, start={"edge": 0, "t": 0.5})
+        assert (track["perimeter_cm"], track["area_cm2"]) == (None, None)
+
+    def test_update_replaces_and_clears_the_metrics(self, client):
+        track = create(client, perimeter_cm=700.5, area_cm2=36500.0)
+        body = client.put(
+            f"{TRACKS}/{track['id']}", json=track_payload(perimeter_cm=None, area_cm2=None)
+        ).json()
+        assert (body["perimeter_cm"], body["area_cm2"]) == (None, None)
+
+    def test_list_includes_the_metrics(self, client):
+        create(client, perimeter_cm=700.5, area_cm2=36500.0)
+        item = client.get(TRACKS).json()["items"][0]
+        assert (item["perimeter_cm"], item["area_cm2"]) == (700.5, 36500.0)
+
+    def test_export_includes_the_metrics_and_can_be_imported_again(self, client):
+        track = create(client, perimeter_cm=700.5, area_cm2=36500.0)
+        exported = client.get(f"{TRACKS}/{track['id']}/export").json()
+        assert (exported["perimeter_cm"], exported["area_cm2"]) == (700.5, 36500.0)
+        imported = client.post(TRACKS, json=exported).json()
+        assert (imported["perimeter_cm"], imported["area_cm2"]) == (700.5, 36500.0)
+        assert imported["id"] != track["id"]

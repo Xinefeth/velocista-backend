@@ -141,3 +141,40 @@ class TestStartEdge:
 def test_validate_reports_the_first_failure_only():
     track = replace(make_track(), name="", length_cm=0)
     assert reason_of(track) == "track_name_invalid"
+
+
+class TestPerimeterAndArea:
+    """EN-28: perimeter_cm / area_cm2 are optional, closed-only and bounded (PO assumptions)."""
+
+    @pytest.mark.parametrize(
+        ("perimeter", "area"),
+        [(None, None), (700.5, 36500.0), (700.5, None), (None, 36500.0), (0, 0), (400000, 300000)],
+    )
+    def test_validate_when_metrics_within_limits_passes(self, perimeter, area):
+        validate_track(make_track(perimeter_cm=perimeter, area_cm2=area))
+
+    @pytest.mark.parametrize(
+        ("perimeter", "area"),
+        [(-0.1, None), (400000.1, None), (None, -0.1), (None, 300000.1)],
+    )
+    def test_validate_when_metrics_out_of_range_rejects(self, perimeter, area):
+        track = make_track(perimeter_cm=perimeter, area_cm2=area)
+        assert reason_of(track) == "track_metrics_invalid"
+
+    @pytest.mark.parametrize(("perimeter", "area"), [(700.5, None), (None, 100.0), (700.5, 100.0)])
+    def test_validate_when_open_track_has_metrics_rejects(self, perimeter, area):
+        track = make_track(closed=False, start=Start(0, 0.5), perimeter_cm=perimeter, area_cm2=area)
+        assert reason_of(track) == "track_metrics_invalid"
+
+    def test_validate_when_open_track_has_no_metrics_passes(self):
+        validate_track(make_track(closed=False, start=Start(0, 0.5)))
+
+    def test_validate_area_limit_follows_the_board_size(self):
+        small = make_track(board=Board(50, 50), area_cm2=10000.0)
+        validate_track(small)  # 4 x 2500
+        assert reason_of(replace(small, area_cm2=10000.1)) == "track_metrics_invalid"
+
+    @pytest.mark.parametrize("bad", [float("nan"), float("inf"), float("-inf")])
+    def test_validate_when_metric_not_finite_rejects(self, bad):
+        assert reason_of(make_track(perimeter_cm=bad)) == "track_not_finite"
+        assert reason_of(make_track(area_cm2=bad)) == "track_not_finite"

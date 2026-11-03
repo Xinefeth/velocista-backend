@@ -165,3 +165,58 @@ class TestDomainErrorsUseTheBusinessObject:
     def test_put_when_missing_and_invalid_answers_404_first(self, client):
         response = client.put(f"{TRACKS}/999999", json=track_payload(profile_id="nope"))
         assert response.status_code == 404
+
+
+class TestPerimeterAndAreaErrors:
+    @pytest.mark.parametrize("field", ["perimeter_cm", "area_cm2"])
+    def test_open_track_with_a_metric_returns_the_domain_object(self, client, field):
+        body = track_payload(closed=False, start={"edge": 0, "t": 0.5}, **{field: 10.0})
+        response = client.post(TRACKS, json=body)
+        assert response.status_code == 422
+        detail = response.json()["detail"]
+        assert isinstance(detail, dict)
+        assert detail["reason"] == "track_metrics_invalid"
+
+    def test_area_over_four_times_the_board_returns_the_domain_object(self, client):
+        response = client.post(TRACKS, json=track_payload(area_cm2=300000.5))
+        assert response.status_code == 422
+        assert response.json()["detail"]["reason"] == "track_metrics_invalid"
+
+    def test_area_at_four_times_the_board_is_accepted(self, client):
+        assert client.post(TRACKS, json=track_payload(area_cm2=300000)).status_code == 201
+
+    @pytest.mark.parametrize(
+        ("field", "value"),
+        [
+            ("perimeter_cm", -1),
+            ("perimeter_cm", 400000.5),
+            ("area_cm2", -1),
+            ("perimeter_cm", "wide"),
+        ],
+    )
+    def test_out_of_bounds_metric_returns_the_parsing_list(self, client, field, value):
+        response = client.post(TRACKS, json=track_payload(**{field: value}))
+        assert response.status_code == 422
+        assert isinstance(response.json()["detail"], list)
+        assert locs(response)[0] == ("body", field)
+
+    @pytest.mark.parametrize("literal", ["NaN", "Infinity"])
+    def test_not_finite_metric_returns_422_list_not_500(self, client, literal):
+        raw = (
+            '{"name":"n","board":{"width_cm":300,"height_cm":250},"closed":true,'
+            '"points":[{"x":1,"y":1},{"x":2,"y":2},{"x":3,"y":1}],"length_cm":10,"area_cm2":'
+            + literal
+            + "}"
+        )
+        response = client.post(TRACKS, content=raw, headers={"Content-Type": "application/json"})
+        assert response.status_code == 422
+        assert isinstance(response.json()["detail"], list)
+
+    def test_update_with_invalid_metrics_is_rejected_and_keeps_the_old_values(self, client):
+        track = client.post(TRACKS, json=track_payload(perimeter_cm=700.5)).json()
+        response = client.put(
+            f"{TRACKS}/{track['id']}",
+            json=track_payload(closed=False, start={"edge": 0, "t": 0.5}, perimeter_cm=5.0),
+        )
+        assert response.status_code == 422
+        assert client.get(f"{TRACKS}/{track['id']}").json()["perimeter_cm"] == 700.5

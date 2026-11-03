@@ -85,6 +85,8 @@ class TrackIn(_Strict):
                 "start": {"edge": 0, "t": 0.35},
                 "profile_id": "lgr2026",
                 "length_cm": 812.4,
+                "perimeter_cm": 812.4,
+                "area_cm2": 36500.0,
             }
         },
     )
@@ -100,6 +102,20 @@ class TrackIn(_Strict):
         gt=0,
         le=limits.LENGTH_MAX_CM,
         description="Total line length in centimetres, computed by the frontend and stored as sent",
+    )
+    perimeter_cm: float | None = Field(
+        default=None,
+        ge=0,
+        le=limits.PERIMETER_MAX_CM,
+        description="Perimeter of a closed track in centimetres (null if the track is open), "
+        "computed by the frontend and stored as sent (assumption pending the PO)",
+    )
+    area_cm2: float | None = Field(
+        default=None,
+        ge=0,
+        description="Area enclosed by a closed track without crossings, in square centimetres "
+        "(Gauss formula; null if the track is open or the line crosses itself), computed by the "
+        "frontend and stored as sent; at most 4 times the board area (assumption pending the PO)",
     )
 
     @model_validator(mode="before")
@@ -119,6 +135,8 @@ class TrackIn(_Strict):
             start=Start(self.start.edge, self.start.t),
             profile_id=self.profile_id,
             length_cm=self.length_cm,
+            perimeter_cm=self.perimeter_cm,
+            area_cm2=self.area_cm2,
         )
 
 
@@ -134,6 +152,12 @@ class TrackOut(BaseModel):
     start: StartIO
     profile_id: str | None
     length_cm: float = Field(description="Total line length in centimetres")
+    perimeter_cm: float | None = Field(
+        description="Perimeter of a closed track in centimetres (null if open)"
+    )
+    area_cm2: float | None = Field(
+        description="Enclosed area in square centimetres (null if open or the line crosses itself)"
+    )
     created_at: AwareDatetime
     updated_at: AwareDatetime
 
@@ -152,6 +176,8 @@ class TrackOut(BaseModel):
             start=StartIO(edge=track.start.edge, t=track.start.t),
             profile_id=track.profile_id,
             length_cm=track.length_cm,
+            perimeter_cm=track.perimeter_cm,
+            area_cm2=track.area_cm2,
             created_at=track.created_at,
             updated_at=track.updated_at,
         )

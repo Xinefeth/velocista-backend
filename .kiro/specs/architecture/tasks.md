@@ -20,9 +20,10 @@ verified in the code; `[ ]` marks pending work. Tasks marked `*` are optional.
   - _Requirements: 2.1, 2.2, 2.3_
 
 - [x] 3. Contexts and entry point
-  - [x] 3.1 Eight REST routers registered in `MODULE_ROUTERS` — `src/velocista/main.py`
+  - [x] 3.1 Nine REST routers registered in `MODULE_ROUTERS` (the original eight plus `tracks`, EN-28) — `src/velocista/main.py`
   - [x] 3.2 `GET /api/health` returns 503 when the database is unreachable — `src/velocista/main.py`
-  - _Requirements: 3.1, 3.2_
+  - [x] 3.3 Business rules live in `domain/<context>`: `domain/runs/scoring.py`, `domain/optimization/validation.py`, `domain/config/entities.py`, `domain/events/entities.py`, `domain/tracks/validation.py` (EN-28)
+  - _Requirements: 3.1, 3.2, 3.3_
 
 - [x] 4. WebSocket gateway as ACL
   - [x] 4.1 Legacy `tipo` frames translated before validation — `src/velocista/interface/websocket/gateway.py`, `contract/translation.py`

@@ -62,7 +62,7 @@ that I can find code predictably.
 
 #### Acceptance Criteria
 
-1. THE API SHALL expose the contexts `auth`, `builder`, `catalog`, `config`, `events`, `optimization`, `rules` and `runs` as REST routers registered in `MODULE_ROUTERS` (`main.py`).
+1. THE API SHALL expose the contexts `auth`, `builder`, `catalog`, `config`, `events`, `optimization`, `rules`, `runs` and `tracks` as REST routers registered in `MODULE_ROUTERS` (`main.py`).
 2. THE API SHALL expose a public `GET /api/health` that returns HTTP 503 when PostgreSQL is unreachable.
 3. WHERE a context has business rules (`runs`, `optimization`, `config`, `events`), THE rules SHALL live in `domain/<context>`.
 4. IF a context has no framework-free logic yet (`auth`), THEN THE context SHALL keep its logic out of `domain` and the gap SHALL be documented.
