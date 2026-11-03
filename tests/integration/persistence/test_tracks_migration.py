@@ -1,4 +1,4 @@
-"""Tracks: migrations 0006 (schema) and 0007 (profile seed), up and down, rolled back."""
+"""Tracks: migrations 0006 (schema), 0007 (profile seed) and 0008 (perimeter/area), up and down."""
 
 import json
 from pathlib import Path
@@ -12,8 +12,8 @@ from sqlalchemy import text
 from velocista.infrastructure.persistence.db import engine
 
 # Se sube hasta la última migración de pistas (no "head"), así las migraciones nuevas de otros
-# contextos (p. ej. 0008 de mediciones) no rompen esta prueba.
-TRACKS_HEAD = "0007"
+# contextos (p. ej. 0009 de mediciones) no rompen esta prueba.
+TRACKS_HEAD = "0008"
 ROOT = Path(__file__).parents[3]
 RULES = (
     "radius_min angle_min no_sharp separation_min margin zone_distance closed length_min "
@@ -51,7 +51,7 @@ def table_exists(connection, name):
 def test_upgrade_head_creates_track_table_and_seeds_two_profiles(migrated):
     connection, config = migrated
     command.upgrade(config, TRACKS_HEAD)
-    assert version(connection) == "0007"
+    assert version(connection) == "0008"
     assert table_exists(connection, "track")
     rules = dict(connection.execute(text("SELECT id, rules FROM profile")).all())
     assert {"lgr2026", "libre"} <= set(rules)
@@ -88,7 +88,7 @@ def test_downgrade_to_0005_removes_track_table_and_seeded_profiles(migrated):
     assert ids.isdisjoint({"lgr2026", "libre"})
     assert {"club", "mr4a"} <= ids
     command.upgrade(config, TRACKS_HEAD)  # y vuelve a subir
-    assert version(connection) == "0007"
+    assert version(connection) == "0008"
 
 
 POINTS = json.dumps([{"x": n, "y": n, "radius": 0, "gap": False} for n in (1, 2)])
@@ -119,3 +119,63 @@ def test_downgrade_0007_refuses_while_a_track_uses_a_seeded_profile(migrated):
     insert_track(connection, profile_id="lgr2026")
     with pytest.raises(RuntimeError, match="lgr2026/libre"):
         command.downgrade(config, "0006")
+
+
+def columns(connection):
+    return {
+        row[0]
+        for row in connection.execute(
+            text(
+                "SELECT column_name FROM information_schema.columns "
+                "WHERE table_schema = current_schema() AND table_name = 'track'"
+            )
+        )
+    }
+
+
+def test_0008_adds_nullable_perimeter_and_area_columns_and_checks(migrated):
+    connection, config = migrated
+    command.upgrade(config, TRACKS_HEAD)
+    assert {"perimeter_cm", "area_cm2"} <= columns(connection)
+    nullable = dict(
+        connection.execute(
+            text(
+                "SELECT column_name, is_nullable FROM information_schema.columns "
+                "WHERE table_schema = current_schema() AND table_name = 'track' "
+                "AND column_name IN ('perimeter_cm', 'area_cm2')"
+            )
+        ).all()
+    )
+    assert nullable == {"perimeter_cm": "YES", "area_cm2": "YES"}
+    names = {
+        row[0]
+        for row in connection.execute(
+            text(
+                "SELECT conname FROM pg_constraint "
+                "WHERE conrelid = 'track'::regclass AND contype = 'c'"
+            )
+        )
+    }
+    assert {"ck_track_perimeter", "ck_track_area", "ck_track_metrics_closed"} <= names
+
+
+def test_0008_keeps_existing_rows_with_null_metrics(migrated):
+    connection, config = migrated
+    command.upgrade(config, "0007")
+    insert_track(connection)
+    command.upgrade(config, TRACKS_HEAD)
+    row = connection.execute(text("SELECT perimeter_cm, area_cm2 FROM track")).one()
+    assert (row.perimeter_cm, row.area_cm2) == (None, None)
+
+
+def test_downgrade_0008_drops_the_columns_and_keeps_the_tracks(migrated):
+    connection, config = migrated
+    command.upgrade(config, TRACKS_HEAD)
+    insert_track(connection)
+    connection.execute(text("UPDATE track SET closed = true, perimeter_cm = 10, area_cm2 = 5"))
+    command.downgrade(config, "0007")
+    assert version(connection) == "0007"
+    assert not {"perimeter_cm", "area_cm2"} & columns(connection)
+    assert connection.scalar(text("SELECT count(*) FROM track")) == 1
+    command.upgrade(config, TRACKS_HEAD)
+    assert {"perimeter_cm", "area_cm2"} <= columns(connection)

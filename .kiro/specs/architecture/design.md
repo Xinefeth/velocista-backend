@@ -71,7 +71,8 @@ component text is in `3.1_descripcion_componentes.md` (both under
 
 ### 3.2 Contexts
 
-`auth`, `builder`, `catalog`, `config`, `events`, `optimization`, `rules`, `runs`. Each has a REST
+`auth`, `builder`, `catalog`, `config`, `events`, `optimization`, `rules`, `runs`, `tracks` (EN-28; wired
+through `composition.py`, so it adds no deviation). Each has a REST
 router under `interface/rest/<context>/`. `domain/auth` and `application/auth` contain only
 `__init__.py`: authentication lives in `infrastructure/security.py` (JWT) and
 `interface/rest/auth/` (login, middleware).
@@ -85,7 +86,7 @@ router under `interface/rest/<context>/`. `domain/auth` and `application/auth` c
 | 3 | Ingestion is "FUTURO; NO implementar en v1" | `infrastructure/ingestion/recorder.py` and `infrastructure/integrations/velocista_sim/` are implemented and wired in `main.lifespan` |
 | 4 | `interface/websocket/commands.py` exists | It does not; device commands are in `interface/rest/devices/router.py` |
 | 5 | Context `timer` | There is no `timer` context; the timer is a device over `/ws/timer` |
-| 6 | "sin tests reales en v1" | The suite has 371 collected tests (see `testing-strategy`) |
+| 6 | "sin tests reales en v1" | The suite has 612 collected tests (see `testing-strategy`) |
 
 ### 3.4 Runtime and deployment
 

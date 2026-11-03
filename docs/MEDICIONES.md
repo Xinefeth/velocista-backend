@@ -28,7 +28,7 @@ prueba GPS ──────────►  /api/gps-trials                   
 modelo    ───────────►  /api/precision-model/runs            (SP-07)             ─► precision_model_run
 ```
 
-## 2. Base de datos (EN-33) — migración `0008`
+## 2. Base de datos (EN-33) — migración `0009`
 
 | Tabla | Qué guarda | Claves |
 |---|---|---|

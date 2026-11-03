@@ -3,12 +3,18 @@
 ## Overview
 
 Status (2026-10-28): tasks 1–6 and 7.1/7.3a are **implemented and verified locally** on branch
-`feat/EN-28-tracks-api` (uncommitted, as ordered). Verification: full suite against the local
+`feat/EN-28-tracks-api`, merged into `main` by PR #7 on 2026-10-28. Verification: full suite against the local
 PostgreSQL (`127.0.0.1:15432`) = **540 passed, 15 skipped, 0 failed**; `ruff check` clean; the live
 opt-in test passed against a temporary LOCAL server (never against Render). Still `[ ]`: task 0 (the
 PO has not answered; the spec's recommendations were used as assumptions, marked "assumption pending
 the PO" in code, OpenAPI and docs), task 7.2 (deploy to Render, not done) and the optional tasks.
 `*` marks optional tasks.
+
+Update 2026-11-03: requirement 9 (`perimeter_cm`, `area_cm2`, from the sprint Excel) is task 9, on the
+local branch `feat/EN-28-tracks-metrics` created from the updated `origin/main` (uncommitted). It needs
+migration `0008` because `0006` is already merged. Verified on 2026-11-03: the development database was migrated to
+`0008` and the **full suite passed against the local PostgreSQL: 597 passed, 15 skipped, 0 failed** (612
+collected); `ruff check` clean; `ruff format --check` lists only the 2 pre-existing files.
 
 Every sub-task lists the criteria it covers with explicit numbers (no ranges); the traceability matrix
 at the end maps all 49 criteria to tasks.
@@ -66,8 +72,19 @@ at the end maps all 49 criteria to tasks.
   - [x] 7.1 Full suite plus `ruff check` and `ruff format --check` green locally (database up) _Requirements: 8.1, 8.2, 8.3, 8.4_
   - [ ] 7.2 Deploy: the start-up applies `0006` and `0007` on Render; verify with a read-only query that `track` exists and `profile` has 6 rows _Requirements: 7.1, 7.4_
   - [x] 7.3a Update `docs/CONTRACT.md` with the track fields, limits, error shapes and profile track rules — `docs/CONTRACT.md` _Requirements: 6.5_
-  - [ ] 7.3b Update the `testing-strategy` and `data-model-persistence` specs with the new counts (540 passed / 15 skipped; `track` table; head `0007`; 20 tables in `public`)
+  - [x] 7.3b Updated the `testing-strategy`, `data-model-persistence` and `architecture` specs with the final counts (612 collected; full run 2026-11-03: 597 passed / 15 skipped; `track` table; head `0008`; 20 tables in `public`)
   - _Requirements: 6.5, 7.1, 7.4, 8.1, 8.2, 8.3, 8.4_
+
+- [x] 9. Perimeter and area (requirement 9, added 2026-11-03)
+  - [x] 9.1 Domain: `perimeter_cm` and `area_cm2` on `Track`; `_validate_metrics` with reason `track_metrics_invalid` — `src/velocista/domain/tracks/entities.py`, `src/velocista/domain/tracks/validation.py` _Requirements: 9.2, 9.3, 9.4, 9.5, 9.7_
+  - [x] 9.2 Schemas, router and OpenAPI units (centimetres and square centimetres, optional, nullable) — `src/velocista/interface/rest/tracks/schemas.py`, `src/velocista/interface/rest/tracks/router.py` _Requirements: 9.1, 9.2, 9.5, 9.6, 9.7_
+  - [x] 9.3 Model with the three `CHECK`s and repository mapping — `src/velocista/infrastructure/persistence/models/tracks.py`, `src/velocista/infrastructure/persistence/repositories/tracks_repository.py` _Requirements: 9.1, 9.7_
+  - [x] 9.4 Additive migration `0008` (nullable columns, `CHECK`s, downgrade drops them) — `src/velocista/infrastructure/persistence/migrations/versions/0008_track_metrics.py` _Requirements: 9.1, 9.8_
+  - [x] 9.5 Unit tests: bounds, closed rule, finiteness, area cap by board size, service stores/clears as sent — `tests/unit/domain/tracks/test_track_validation.py` (`TestPerimeterAndArea`), `tests/unit/application/tracks/test_tracks_service.py` (`TestMetrics`) _Requirements: 9.2, 9.3, 9.4, 9.5, 9.7, 9.9_
+  - [x] 9.6 PostgreSQL tests: repository and `CHECK`s, migration `0008` up/down, routes and both 422 shapes — `tests/integration/persistence/test_tracks_repository.py` (`TestMetrics`), `tests/integration/persistence/test_tracks_migration.py`, `tests/integration/rest/tracks/test_tracks_api.py` (`TestPerimeterAndArea`), `tests/integration/rest/tracks/test_tracks_errors.py` (`TestPerimeterAndAreaErrors`) _Requirements: 9.1, 9.3, 9.4, 9.5, 9.7, 9.8, 9.9_
+  - [x] 9.7 Contract tests: fields in `TrackOut`, units and optional/nullable — `tests/contract/rest/test_openapi_contract.py`, `tests/contract/rest/test_tracks_openapi_units.py` _Requirements: 9.6, 9.9_
+  - [x] 9.8 Document the fields, limits and the new reason — `docs/CONTRACT.md` _Requirements: 9.6_
+  - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 9.9_
 
 - [ ]* 8. Optional
   - [ ]* 8.1 Plausibility check: reject `length_cm` above the polyline length plus a tolerance — `src/velocista/domain/tracks/validation.py`
@@ -75,8 +92,9 @@ at the end maps all 49 criteria to tasks.
   - [ ]* 8.3 `If-Match`/`updated_at` check on `PUT` against lost updates
   - [ ]* 8.4 List filters (`profile_id`, `q` by name)
   - [ ]* 8.5 Editable profiles (`POST/PUT/DELETE /api/profiles` with validation of the `track` block; 409 `profile_in_use` on delete) — separate story (Open question 4)
+  - [ ]* 8.7 Recompute perimeter and area in the backend with the EN-34 service (Gauss, scale 1:N) and compare with the values sent by the frontend
   - [ ]* 8.6 Versioned export envelope (`{"format": "velocista-track", "version": 1, ...}`) (Open question 6)
-  - _Requirements: 2.9, 4.1, 5.6, 6.7_
+  - _Requirements: 2.9, 4.1, 5.6, 6.7, 9.7_
 
 ## Traceability matrix (criterion → tasks)
 
@@ -131,6 +149,15 @@ at the end maps all 49 criteria to tasks.
 | 8 | 8.3 contract tests | 5.6, 5.8, 7.1 |
 | 8 | 8.4 migration test | 3.5, 7.1 |
 | 8 | 8.5 live opt-in test | 6.1 |
+| 9 | 9.1 optional fields stored and returned | 9.2, 9.3, 9.4, 9.6 |
+| 9 | 9.2 perimeter bounds | 9.1, 9.2, 9.5 |
+| 9 | 9.3 area bounds vs board | 9.1, 9.5, 9.6 |
+| 9 | 9.4 metrics need a closed track | 9.1, 9.5, 9.6 |
+| 9 | 9.5 finite values | 9.1, 9.2, 9.5, 9.6 |
+| 9 | 9.6 units in OpenAPI | 9.2, 9.7, 9.8 |
+| 9 | 9.7 no recompute; `PUT` clears | 9.1, 9.2, 9.3, 9.5, 9.6 (optional 8.7) |
+| 9 | 9.8 additive migration `0008` | 9.4, 9.6 |
+| 9 | 9.9 tests | 9.5, 9.6, 9.7 |
 
 ## Notes
 
@@ -140,6 +167,42 @@ at the end maps all 49 criteria to tasks.
 - Not verified: the frontend's tolerance for profiles without robot rules, the exact way the current
   tests exercise Alembic, and whether Render needs a manual step for the data migration.
 - Order: 0 → (1, 3.1–3.2) → 2 → 3.3–3.5 → 4 → 5 → 6 → 7.
+
+## Pre-deployment checklist for Render (task 7.2) — for the owner to decide; nothing here was executed
+
+1. **Find out what Render already has.** PR #7 was merged into `main` on 2026-10-28; if Render deploys
+   `main` automatically, `0006` and `0007` may already have been applied at start-up. Read-only check by
+   the owner (external URL in a session variable, never in a chat): `SELECT version_num FROM
+   alembic_version;` — `0005` = not deployed, `0007` = deployed, `0008` after the next deploy.
+2. **What the start-up applies** (`startup.py` runs `alembic upgrade head` before serving): `0006`
+   (table `track`, one index, seven `CHECK`s), `0007` (two rows in `profile`), `0008` (two nullable
+   columns, three `CHECK`s). Everything is additive: no existing table or row changes. The console's
+   profile list gains two entries.
+3. **Disk risk of the free database.** On 2026-10-27 the disk filled and even a `TRUNCATE` failed
+   (`could not extend file`). Check `pg_database_size` and the free space in the panel before deploying;
+   the telemetry limits (stride 5, cap 20,000 per run) are in the code since `a0fed7c`. Do not deploy
+   over a nearly full disk: clean `external_telemetry` first (see `deployment-operations`). A failing
+   migration rolls its revision back (transactional DDL) and the container does not start serving; that
+   Render then keeps the previous deploy is expected but **not verified**.
+4. **Backup first.** Backups of the free plan are not verified. Nothing destructive happens on upgrade,
+   but export at least `profile` (it receives rows) and note `alembic_version`. Rollback: redeploying the
+   old code does **not** downgrade the database, and the old code ignores the new table, columns and
+   profiles; a manual `alembic downgrade` drops the two derived columns (`0008`), deletes only
+   `lgr2026`/`libre` (`0007`, refuses while tracks use them) and refuses while tracks exist (`0006`).
+5. **Environment.** No new variable. Check that `CORS_ORIGINS` (set by hand, `sync: false`) includes the
+   console origin, that `AUTH_REQUIRED=true` (from `render.yaml`) so `/api/tracks` needs a JWT, and that the
+   `SIM_*` values are unchanged.
+6. **Shared code in this release.** `src/velocista/interface/rest/errors.py` now has a
+   `RequestValidationError` handler (a `NaN`/`Infinity` body gives 422 instead of 500) that applies to every
+   endpoint; review it in the PR.
+7. **After deploying (read-only):** `alembic_version` = `0008`; `track` has `perimeter_cm` and
+   `area_cm2`; `profile` has 6 rows; `GET /api/profiles/lgr2026` returns `rules.track`; `GET /api/tracks`
+   with a JWT returns 200 and an empty page; database size stays small. The live test
+   (`TRACKS_LIVE_TEST=1`, `TRACKS_LIVE_URL`) creates and deletes its own track; run it against Render only
+   by the owner's explicit decision.
+8. **Order.** Deploy the backend before the frontend sends `perimeter_cm` and `area_cm2`.
+9. **Never** run `pytest` with `DATABASE_URL` pointing to Render (there is no guard yet; see
+   `testing-strategy` task 5.1).
 
 ## Implementation results and spec/reality notes (2026-10-28)
 
