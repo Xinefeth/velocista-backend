@@ -14,6 +14,12 @@ from sqlalchemy.orm import Session
 from velocista.application.builder.use_cases import BuilderService
 from velocista.application.catalog.use_cases import CatalogService
 from velocista.application.config.ports import ConfigRepository, DeviceGateway
+from velocista.application.measurements.use_cases import (
+    CalibrationService,
+    GpsErrorService,
+    MeasurementsService,
+    PrecisionModelService,
+)
 from velocista.application.tracks.use_cases import TracksService
 from velocista.infrastructure.persistence.db import get_session
 from velocista.infrastructure.persistence.repositories.builder_repository import (
@@ -25,6 +31,9 @@ from velocista.infrastructure.persistence.repositories.catalog_repository import
 )
 from velocista.infrastructure.persistence.repositories.config_repository import (
     SqlAlchemyConfigRepository,
+)
+from velocista.infrastructure.persistence.repositories.measurements_repository import (
+    SqlAlchemyMeasurementsRepository,
 )
 from velocista.infrastructure.persistence.repositories.tracks_repository import (
     SqlAlchemyTracksRepository,
@@ -50,6 +59,22 @@ def get_builder_service(session: DbSession) -> BuilderService:
 
 def get_tracks_service(session: DbSession) -> TracksService:
     return TracksService(SqlAlchemyTracksRepository(session))
+
+
+def get_measurements_service(session: DbSession) -> MeasurementsService:
+    return MeasurementsService(SqlAlchemyMeasurementsRepository(session))
+
+
+def get_calibration_service(session: DbSession) -> CalibrationService:
+    return CalibrationService(SqlAlchemyMeasurementsRepository(session))
+
+
+def get_gps_error_service(session: DbSession) -> GpsErrorService:
+    return GpsErrorService(SqlAlchemyMeasurementsRepository(session))
+
+
+def get_precision_model_service(session: DbSession) -> PrecisionModelService:
+    return PrecisionModelService(SqlAlchemyMeasurementsRepository(session))
 
 
 def get_config_repository(session: DbSession) -> ConfigRepository:
