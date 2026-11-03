@@ -82,3 +82,22 @@ def test_track_operations_document_their_errors(spec):
     ]:
         documented = set(spec["paths"][path][method]["responses"])
         assert codes <= documented, (path, method)
+
+
+def test_perimeter_and_area_state_their_units_and_are_optional(schemas):
+    for model in ("TrackIn", "TrackOut"):
+        assert "centimetres" in described(schemas[model], "perimeter_cm")
+        assert "square centimetres" in described(schemas[model], "area_cm2")
+    optional = schemas["TrackIn"]["required"]
+    assert "perimeter_cm" not in optional
+    assert "area_cm2" not in optional
+
+
+def test_perimeter_and_area_accept_null(schemas):
+    for field in ("perimeter_cm", "area_cm2"):
+        kinds = [option.get("type") for option in schemas["TrackOut"]["properties"][field]["anyOf"]]
+        assert "null" in kinds
+
+
+def test_track_operations_mention_area_in_square_centimetres(spec):
+    assert "square centimetres" in spec["paths"]["/api/tracks"]["post"]["description"]

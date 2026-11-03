@@ -47,7 +47,11 @@ class Start:
 
 @dataclass(frozen=True)
 class Track:
-    """Pista guardada. `length_cm` lo calcula el frontend; el backend no recalcula geometría."""
+    """Pista guardada. `length_cm`, `perimeter_cm` y `area_cm2` los calcula el frontend.
+
+    El backend no recalcula geometría. `perimeter_cm` y `area_cm2` son NULOS en pistas abiertas;
+    `area_cm2` también es nulo si la línea se cruza (la fórmula de Gauss daría un área engañosa).
+    """
 
     name: str
     board: Board
@@ -57,6 +61,8 @@ class Track:
     start: Start
     profile_id: str | None
     length_cm: float
+    perimeter_cm: float | None = None  # cm; solo pistas cerradas
+    area_cm2: float | None = None  # cm2; solo pistas cerradas y sin cruces
     id: int | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None

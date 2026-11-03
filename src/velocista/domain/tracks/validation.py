@@ -23,6 +23,11 @@ COORD_MAX_CM = 10000  # los puntos pueden salir del tablero: la regla `margin` l
 ZONE_SIZE_MAX_CM = 2000
 ZONE_NAME_MAX = 80
 LENGTH_MAX_CM = 100000
+# Perímetro de una pista cerrada: 4 veces el tope del largo, como holgura ante redondeos.
+PERIMETER_MAX_CM = 400000
+# El área no puede pasar de 4 veces la del tablero: los puntos pueden salir del tablero (la regla
+# `margin` lo detecta), y el tope sobre todo atrapa errores de unidad (m2 por cm2 = factor 10^4).
+AREA_BOARD_FACTOR = 4
 
 
 def _numbers(track: Track):
@@ -30,6 +35,9 @@ def _numbers(track: Track):
     yield track.board.height_cm
     yield track.length_cm
     yield track.start.t
+    for optional in (track.perimeter_cm, track.area_cm2):
+        if optional is not None:
+            yield optional
     for p in track.points:
         yield from (p.x, p.y, p.radius)
     for z in track.zones:
@@ -84,6 +92,7 @@ def validate_track(track: Track) -> None:
         raise Validation(
             "track_length_invalid", f"length_cm must be above 0 and up to {LENGTH_MAX_CM}"
         )
+    _validate_metrics(track)
     # Con menos de 3 puntos el prototipo trata la pista como abierta aunque `closed` esté activo.
     if track.closed and len(track.points) < 3:
         raise Validation(
@@ -93,3 +102,25 @@ def validate_track(track: Track) -> None:
         raise Validation("track_start_invalid", "start.t must be between 0 and 1")
     if not 0 <= track.start.edge < edge_count(len(track.points), track.closed):
         raise Validation("track_start_invalid", "start.edge is not an edge of the polyline")
+
+
+def _validate_metrics(track: Track) -> None:
+    """Perímetro y área: opcionales, solo con pista cerrada y dentro de un rango razonable."""
+    perimeter, area = track.perimeter_cm, track.area_cm2
+    if perimeter is None and area is None:
+        return
+    if not track.closed:
+        raise Validation(
+            "track_metrics_invalid", "perimeter_cm and area_cm2 need a closed track (use null)"
+        )
+    if perimeter is not None and not 0 <= perimeter <= PERIMETER_MAX_CM:
+        raise Validation(
+            "track_metrics_invalid", f"perimeter_cm must be between 0 and {PERIMETER_MAX_CM}"
+        )
+    if area is not None:
+        board_area = track.board.width_cm * track.board.height_cm
+        if not 0 <= area <= board_area * AREA_BOARD_FACTOR:
+            raise Validation(
+                "track_metrics_invalid",
+                f"area_cm2 must be between 0 and {AREA_BOARD_FACTOR} times the board area",
+            )

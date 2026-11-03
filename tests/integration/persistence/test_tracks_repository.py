@@ -149,3 +149,43 @@ class TestConstraints:
             {"points": points},
         )
         assert session.execute(text("SELECT zones FROM track")).scalar_one() == []
+
+
+class TestMetrics:
+    def test_add_and_get_round_trip_keeps_perimeter_and_area(self, repo):
+        saved = repo.add_track(make_track(perimeter_cm=700.5, area_cm2=36500.25))
+        loaded = repo.get_track(saved.id)
+        assert (loaded.perimeter_cm, loaded.area_cm2) == (700.5, 36500.25)
+
+    def test_metrics_default_to_null(self, repo):
+        loaded = repo.get_track(repo.add_track(make_track()).id)
+        assert (loaded.perimeter_cm, loaded.area_cm2) == (None, None)
+
+    def test_update_replaces_and_clears_metrics(self, repo):
+        saved = repo.add_track(make_track(perimeter_cm=10.0, area_cm2=20.0))
+        updated = repo.update_track(saved.id, make_track(perimeter_cm=None, area_cm2=None))
+        assert (updated.perimeter_cm, updated.area_cm2) == (None, None)
+
+    @pytest.mark.parametrize(
+        "overrides",
+        [
+            {"perimeter_cm": -1.0},
+            {"perimeter_cm": 400000.5},
+            {"area_cm2": -1.0},
+            {"area_cm2": 300000.5},  # 4 x (300 x 250)
+            {"closed": False, "perimeter_cm": 10.0},
+            {"closed": False, "area_cm2": 10.0},
+        ],
+        ids=lambda o: "-".join(f"{k}={v}" for k, v in o.items()),
+    )
+    def test_check_rejects_invalid_metrics(self, session, overrides):
+        session.add(raw_row(**overrides))
+        with pytest.raises(IntegrityError):
+            session.flush()
+        session.rollback()
+
+    def test_check_accepts_metrics_at_the_limits(self, session):
+        session.add(raw_row(perimeter_cm=400000.0, area_cm2=300000.0))
+        session.add(raw_row(closed=False, perimeter_cm=None, area_cm2=None))
+        session.add(raw_row(perimeter_cm=0.0, area_cm2=0.0))
+        session.flush()

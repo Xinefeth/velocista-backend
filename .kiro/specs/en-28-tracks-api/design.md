@@ -80,24 +80,28 @@ Track JSON (snake_case, English):
   "start": {"edge": 0, "t": 0.35},
   "profile_id": "lgr2026",
   "length_cm": 812.4,
+  "perimeter_cm": 812.4,   // cm, null if the track is open (computed by the frontend)
+  "area_cm2": 36500.0,     // cm2, null if open or self-crossing (computed by the frontend)
   "created_at": "2026-10-28T15:00:00Z", "updated_at": "2026-10-28T15:00:00Z"
 }
 ```
 
 Mapping from the prototype (done by the frontend, listed so both specs agree): `pts→points`,
 `pts[].r→radius`, `pts[].g→gap`, `board.w/h→board.width_cm/height_cm`, `zones[].w/h→width/height`,
-`start.e→start.edge`, `build(doc).L→length_cm`.
+`start.e→start.edge`, `build(doc).L→length_cm` (perimeter and area are computed by the frontend from the same geometry; `perimeter_cm` equals the line length of a closed track).
 
 ### 3.2 Domain (`domain/tracks`)
 
 - `entities.py`: frozen dataclasses `Point`, `Zone`, `Board`, `Start`, `Track` (no framework).
 - `validation.py`: constants `MAX_POINTS=500`, `MIN_POINTS=2`, `MAX_ZONES=100`, `BOARD_MIN_CM=50`,
   `BOARD_MAX_CM=2000`, `RADIUS_MAX_CM=200`, `COORD_MAX_CM=10000`, `ZONE_SIZE_MAX_CM=2000`,
-  `ZONE_NAME_MAX=80`, `NAME_MAX=80`, `LENGTH_MAX_CM=100000`; and `validate_track(...)`, raising
+  `ZONE_NAME_MAX=80`, `NAME_MAX=80`, `LENGTH_MAX_CM=100000`, `PERIMETER_MAX_CM=400000`,
+  `AREA_BOARD_FACTOR=4`; and `validate_track(...)`, raising
   `Validation(reason, detail)` for: `track_name_invalid`, `track_points_count`, `track_zones_count`,
   `track_board_size`, `track_radius_range`, `track_coordinate_range`, `track_zone_size`,
   `track_zone_name`, `track_not_finite`, `track_length_invalid`, `track_start_invalid`,
-  `track_closed_needs_three_points`.
+  `track_closed_needs_three_points` and, for perimeter and area, `track_metrics_invalid` (an open track
+  with a metric, a perimeter outside `0..400000`, or an area outside `0..4 × board area`).
 - Start edge rule (agreed with the frontend spec): valid `edge` is an integer in `0..(n − 1)` when
   `closed` and `0..(n − 2)` when open, `t` in `[0, 1]`; `closed` with fewer than 3 points is rejected
   (the prototype's `build()` ignores `closed` below 3 points, so the combination is ambiguous).
@@ -129,6 +133,9 @@ Mapping from the prototype (done by the frontend, listed so both specs agree): `
 | `start_t` | Float NOT NULL | `CHECK BETWEEN 0 AND 1` |
 | `profile_id` | String(40) NULL | FK `profile.id` `ON DELETE RESTRICT` (as `run.profile_id`), indexed |
 | `length_cm` | Float NOT NULL | `CHECK > 0 AND <= 100000` |
+| `perimeter_cm` | Float NULL (migration `0008`) | `CHECK perimeter_cm IS NULL OR (>= 0 AND <= 400000)` |
+| `area_cm2` | Float NULL (migration `0008`) | `CHECK area_cm2 IS NULL OR (>= 0 AND <= board_width_cm × board_height_cm × 4)` |
+| (row) | | `CHECK closed OR (perimeter_cm IS NULL AND area_cm2 IS NULL)` |
 | `created_at`, `updated_at` | timestamptz NOT NULL | server default `now()`; `updated_at` set on update |
 
   Points and zones are JSONB because they are always read and written whole; no per-point query exists.
@@ -141,6 +148,10 @@ Mapping from the prototype (done by the frontend, listed so both specs agree): `
   exist (same pattern as `0005`).
 - `migrations/versions/0007_track_profiles.py` (data): inserts `lgr2026` and `libre`; downgrade deletes
   only those two rows.
+- `migrations/versions/0008_track_metrics.py` (additive): adds the nullable columns `perimeter_cm` and
+  `area_cm2` and the three `CHECK`s above; existing rows keep NULL; the downgrade drops the constraints
+  and the columns (derived values, recomputable by the frontend). It is a separate revision because `0006`
+  was merged in PR #7 and cannot be edited.
 
 ### 3.5 Track rules in profiles
 
@@ -262,6 +273,15 @@ Profiles:      GET /api/profiles ▶ rules JSONB returned as stored (rules.track
     resource in the URL.
 12. **Coordinates may lie outside the board.** The `margin` rule exists to report it, so the backend
     only bounds them (`|x|, |y| <= 10000` cm) and requires finiteness.
+13. **Perimeter and area are optional, closed-only and stored as sent.** The frontend has the geometry
+    (arcs, crossings); the backend only keeps them coherent: finite, within a sanity range and null for
+    open tracks. Open: a closed track with a crossing line has `area_cm2` null by definition (Gauss would
+    give a misleading net area) — the backend cannot verify crossings, so it only enforces the closed rule.
+14. **Caps.** `perimeter_cm <= 400000` (4 × the `length_cm` cap) and `area_cm2 <= 4 × board area`. The
+    area cap mainly catches unit mistakes (m² vs cm², a factor of 10^4); it is loose enough for points a
+    little outside the board. Both are assumptions pending the PO.
+15. **New revision `0008`, not an edit of `0006`.** PR #7 is merged, so `0006` is immutable and the
+    development database is already at `0007`.
 
 ## Risks
 
@@ -275,6 +295,8 @@ Profiles:      GET /api/profiles ▶ rules JSONB returned as stored (rules.track
 | Last-write-wins on `PUT` | Lost edits across consoles | Optional `If-Match` / `updated_at` check |
 | Two 422 shapes (list vs object) | Frontend shows a generic message if it only handles one | Documented in §3.7; contract test asserts both |
 | Points far outside the board (up to ±10000 cm) | Odd but valid tracks | Intended: `margin` rule reports it; bound is a PO assumption |
+| Client sends a perimeter or area inconsistent with the geometry | Wrong figures shown or reused | Bounds and the closed rule now; optional recompute with the EN-34 service later (task 8.7) |
+| Unit mix-up (the console shows m and m², the API stores cm and cm²) | Values off by 10^2 / 10^4 | Units in OpenAPI and `docs/CONTRACT.md`; area cap catches the m² mistake |
 | Large payloads (500 points) | Slow requests | Bounded by limits; request size is small (a few tens of kB) |
 | Migration order/data | Bad seed on Render | Test up/down locally; run on Render only through the normal start-up migration |
 | The prototype is unversioned (`trazador-de-pistas.html`) | Source of seed values could be lost | Keep a copy in an active repository (see the analysis, §7) |
@@ -291,7 +313,11 @@ Profiles:      GET /api/profiles ▶ rules JSONB returned as stored (rules.track
 - **Contract (`tests/contract/rest`)**: OpenAPI contains the six operations with documentation and
   error responses; error body format; the schema descriptions mention centimetres for `length_cm`,
   `board`, `points` and `zones`, and the profile description states the units of `rules.track`; a
-  parsing error returns the list shape and a domain error the object shape.
+  parsing error returns the list shape and a domain error the object shape; `perimeter_cm` and
+  `area_cm2` are optional (not in `required`), accept null and state their units.
+- **Perimeter and area**: unit tests of every bound and of the closed rule; repository and `CHECK` tests;
+  route tests (stored as sent, null by default, cleared by `PUT`, exported and re-imported, both 422
+  shapes); migration `0008` up/down (columns nullable, existing rows NULL, downgrade keeps the tracks).
 - **Migration**: `0006` upgrade/downgrade on an empty database (downgrade with rows refuses);
   `0007` inserts and removes only its two profiles. How the existing suite exercises Alembic is **not
   verified**; the design assumes a test that runs the revisions on a temporary schema.

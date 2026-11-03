@@ -25,6 +25,8 @@ def _to_entity(row: TrackModel) -> Track:
         start=Start(edge=row.start_edge, t=row.start_t),
         profile_id=row.profile_id,
         length_cm=row.length_cm,
+        perimeter_cm=row.perimeter_cm,
+        area_cm2=row.area_cm2,
         created_at=row.created_at,
         updated_at=row.updated_at,
     )
@@ -45,6 +47,8 @@ def _fields(track: Track) -> dict:
         "start_t": track.start.t,
         "profile_id": track.profile_id,
         "length_cm": track.length_cm,
+        "perimeter_cm": track.perimeter_cm,
+        "area_cm2": track.area_cm2,
     }
 
 

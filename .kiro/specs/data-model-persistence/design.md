@@ -5,13 +5,14 @@
 SQLAlchemy 2.0 models (`infrastructure/persistence/models/`) are the ORM mapping; repositories
 (`persistence/repositories/`) implement the application ports; Alembic (`persistence/migrations/`) owns
 the schema. Facts below come from the migration files, the models and read-only queries against the
-Render database on 2026-10-27/28.
+Render database on 2026-10-27/28, and (for migrations 0006/0007) from the code and the local
+development database on 2026-11-03.
 
 ## Goals & Non-Goals
 
 **Goals**
 
-- A rebuildable schema through five linear migrations.
+- A rebuildable schema through eight linear migrations (`0001`–`0008`).
 - Clear ownership of each table by a bounded context.
 - A documented difference between the code and the live database.
 
@@ -27,13 +28,15 @@ models/*.py (ORM) ◀── repositories/*.py (implement application ports) ─�
         │ metadata
         ▼
 migrations/versions: 0001 core ─▶ 0002 profiles/setups/runs ─▶ 0003 reference seed ─▶ 0004 ingestion_id ─▶ 0005 external sessions
+                                                          ─▶ 0006 tracks ─▶ 0007 track profiles ─▶ 0008 track metrics (EN-28)
         ▼
-PostgreSQL: 19 tables · alembic_version = 0005
+PostgreSQL: Render = 19 tables · alembic_version 0005 (as of 2026-10-28)
+            local dev = 20 tables · alembic_version 0008
 ```
 
 ## Component Design
 
-### 3.1 Tables by migration (19)
+### 3.1 Tables by migration (20 with EN-28)
 
 | Migration | Tables / changes |
 |---|---|
@@ -42,6 +45,9 @@ PostgreSQL: 19 tables · alembic_version = 0005
 | `0003_reference_seed` | Data: component types, slots, controllers, profiles (`0003_reference_data.json`) |
 | `0004_simulation_ingestion` | `run.ingestion_id` + unique `uq_run_ingestion_id` |
 | `0005_external_sessions` | `external_session`, `external_telemetry`; `run.external_session_id`, `external_run_id`, `closure_status`, unique `uq_run_external`; nullable `run.mode/line/battery_compensation/turbine_power_pct` and `lap.accumulated_error/lost_lines/battery_v` |
+| `0006_tracks` | `track` + index `ix_track_profile_id`; `CHECK`s `ck_track_name`, `ck_track_board`, `ck_track_points`, `ck_track_zones`, `ck_track_start_edge`, `ck_track_start_t`, `ck_track_length` |
+| `0007_track_profiles` | Data: profiles `lgr2026` and `libre` with `rules.track` (lengths in cm) |
+| `0008_track_metrics` | `track.perimeter_cm`, `track.area_cm2` (nullable) + `CHECK`s `ck_track_perimeter`, `ck_track_area`, `ck_track_metrics_closed` |
 | (Alembic) | `alembic_version` |
 
 ### 3.2 Sizes and rows on Render (2026-10-28, read-only)
@@ -66,7 +72,20 @@ The cause of the merge is not established. Whether a fresh `alembic upgrade head
 database yields one or two unique indexes was **not verified**. Functional behaviour is identical (one
 unique btree on `(session_id, seq)`); the live shape saves one index.
 
-### 3.4 Heap, index and TOAST at the incident
+### 3.4 `track` table (EN-28)
+
+`id` bigint identity PK; `name` varchar(80); `board_width_cm`, `board_height_cm`, `start_t`, `length_cm`
+float; `closed` boolean; `start_edge` integer; `points` JSONB (array of 2–500) and `zones` JSONB (array of
+0–100, default `[]`); `profile_id` varchar(40) NULL → `profile(id)` `ON DELETE RESTRICT` (indexed);
+`created_at`/`updated_at` timestamptz; since `0008` also `perimeter_cm` and `area_cm2` float NULL. The `CHECK`s cover scalar columns and array lengths; the array
+length check is written as `CASE WHEN jsonb_typeof(col) = 'array' THEN ... ELSE false END` because `AND`
+does not fix the evaluation order. Per-element limits live in the domain and the schemas. The `0006`
+downgrade refuses while rows exist; the `0007` downgrade refuses while a track uses `lgr2026`/`libre`.
+Verified by `tests/integration/persistence/test_tracks_repository.py` and `test_tracks_migration.py`
+(full run 2026-11-03: 597 passed, 15 skipped). The `0008` downgrade drops the two derived columns without
+refusing (the frontend can recompute them). Render has **not** received these migrations (deployment pending).
+
+### 3.5 Heap, index and TOAST at the incident
 
 `external_telemetry` 845 MB = heap 778 MB + indexes 66 MB + TOAST 0 (payload JSONB stayed inline).
 ~99.2 % of rows had `run_id IS NULL`.

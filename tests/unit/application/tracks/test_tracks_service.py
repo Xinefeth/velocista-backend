@@ -9,6 +9,7 @@ from support.track_fixtures import make_track
 from velocista.application.tracks.ports import TracksRepository
 from velocista.application.tracks.use_cases import TracksService
 from velocista.domain.shared.errors import NotFound, Validation
+from velocista.domain.tracks.entities import Start
 
 
 class InMemoryTracksRepository(TracksRepository):
@@ -145,3 +146,28 @@ class TestReadUpdateDelete:
     def test_delete_when_missing_raises_not_found(self, service):
         with pytest.raises(NotFound):
             service.delete_track(99)
+
+
+class TestMetrics:
+    def test_create_stores_perimeter_and_area_as_sent(self, service):
+        saved = service.create_track(make_track(perimeter_cm=700.5, area_cm2=36500.0))
+        assert (saved.perimeter_cm, saved.area_cm2) == (700.5, 36500.0)
+
+    def test_create_without_metrics_keeps_them_null(self, service):
+        saved = service.create_track(make_track())
+        assert (saved.perimeter_cm, saved.area_cm2) == (None, None)
+
+    def test_update_replaces_and_can_clear_the_metrics(self, service):
+        first = service.create_track(make_track(perimeter_cm=700.5, area_cm2=36500.0))
+        cleared = service.update_track(first.id, make_track(perimeter_cm=None, area_cm2=None))
+        assert (cleared.perimeter_cm, cleared.area_cm2) == (None, None)
+
+    def test_create_when_open_track_has_metrics_raises_validation(self, service):
+        with pytest.raises(Validation) as error:
+            service.create_track(make_track(closed=False, start=Start(0, 0.5), perimeter_cm=10.0))
+        assert error.value.reason == "track_metrics_invalid"
+
+    def test_create_when_area_over_the_cap_raises_validation(self, service):
+        with pytest.raises(Validation) as error:
+            service.create_track(make_track(area_cm2=300000.1))
+        assert error.value.reason == "track_metrics_invalid"

@@ -150,6 +150,8 @@ def test_track_schema_exposes_agreed_fields(spec):
         "start",
         "profile_id",
         "length_cm",
+        "perimeter_cm",
+        "area_cm2",
         "created_at",
         "updated_at",
     }

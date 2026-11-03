@@ -42,6 +42,18 @@ class TrackModel(Base):
         CheckConstraint("start_edge >= 0", name="ck_track_start_edge"),
         CheckConstraint("start_t BETWEEN 0 AND 1", name="ck_track_start_t"),
         CheckConstraint("length_cm > 0 AND length_cm <= 100000", name="ck_track_length"),
+        CheckConstraint(
+            "perimeter_cm IS NULL OR (perimeter_cm >= 0 AND perimeter_cm <= 400000)",
+            name="ck_track_perimeter",
+        ),
+        CheckConstraint(
+            "area_cm2 IS NULL OR "
+            "(area_cm2 >= 0 AND area_cm2 <= board_width_cm * board_height_cm * 4)",
+            name="ck_track_area",
+        ),
+        CheckConstraint(
+            "closed OR (perimeter_cm IS NULL AND area_cm2 IS NULL)", name="ck_track_metrics_closed"
+        ),
     )
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(80))
@@ -56,5 +68,7 @@ class TrackModel(Base):
         String(40), ForeignKey("profile.id", ondelete="RESTRICT"), index=True
     )
     length_cm: Mapped[float] = mapped_column(Float)
+    perimeter_cm: Mapped[float | None] = mapped_column(Float)
+    area_cm2: Mapped[float | None] = mapped_column(Float)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

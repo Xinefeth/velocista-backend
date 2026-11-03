@@ -25,8 +25,10 @@ INVALID = (
     "`profile_id` (`track_profile_unknown`) use `{detail: {reason, detail}}`"
 )
 UNITS = (
-    "All distances are in centimetres (`length_cm`, `board`, `points`, `zones`). Limits are "
-    "assumptions pending the PO."
+    "All distances are in centimetres (`length_cm`, `perimeter_cm`, `board`, `points`, `zones`) "
+    "and `area_cm2` is in square centimetres. `perimeter_cm` and `area_cm2` are optional, null "
+    "for open tracks (and `area_cm2` also for a line that crosses itself), computed by the "
+    "frontend and stored as sent. Limits are assumptions pending the PO."
 )
 
 
@@ -70,8 +72,8 @@ def list_tracks(
     description=(
         "Creates a track. It is also the import path: an exported track can be posted again and "
         "creates a new track (`id`, `created_at` and `updated_at` are ignored). The backend does "
-        "not recompute the geometry: `length_cm` is stored as sent. `start` defaults to "
-        "`{edge: 0, t: 0.5}`; `profile_id` is optional. " + UNITS
+        "not recompute the geometry: `length_cm`, `perimeter_cm` and `area_cm2` are stored as "
+        "sent. `start` defaults to `{edge: 0, t: 0.5}`; `profile_id` is optional. " + UNITS
     ),
     responses=error_responses({401: UNAUTHORIZED, 422: INVALID}),
 )

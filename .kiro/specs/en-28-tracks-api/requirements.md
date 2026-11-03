@@ -20,6 +20,8 @@ listed as **Open questions** at the end instead of being changed.
 - **Zona (zone)**: Rectángulo prohibido o marcado en el tablero (`x`, `y`, `width`, `height`, `name`).
 - **Salida (start)**: Posición de arranque: índice de tramo `edge` y posición relativa `t` en `[0, 1]`.
 - **Largo total (length_cm)**: Largo de la línea en una vuelta, en cm, calculado por el **frontend** y guardado por el backend.
+- **Perímetro (perimeter_cm)**: Largo del contorno de una pista **cerrada**, en cm (para una pista cerrada coincide con el largo de la línea); nulo si la pista es abierta. Lo calcula el frontend.
+- **Área (area_cm2)**: Área encerrada por una pista **cerrada y sin cruces**, en **cm²** (fórmula de Gauss); nula si la pista es abierta o la línea se cruza. Lo calcula el frontend.
 - **Perfil (profile)**: Fila de `profile` con `id`, `competition`, `label`, `category` y `rules` JSONB (HU-10).
 - **Reglas de pista (track rules)**: Bloque `track` dentro de `profile.rules` con el ancho de línea, el largo de corte y 13 reglas `{enabled, value}`.
 - **Importar / exportar**: Crear una pista desde un JSON ya mapeado al contrato / descargar una pista como JSON.
@@ -33,6 +35,7 @@ listed as **Open questions** at the end instead of being changed.
 - `profile` (`models/rules.py`): `id String(40)` PK, `competition String(120)`, `label String(40)`, `category String(120)`, `rules JSONB` with `CHECK (jsonb_typeof(rules) = 'object')`. The REST API is **read-only**: `GET /api/profiles` and `GET /api/profiles/{profile_id}` (`interface/rest/rules/router.py`); `ProfileOut.rules` is an untyped `dict`.
 - Seeded profiles (migration `0003`): `club`, `mr4a`, `mr4m`, `mr4s`; their `rules` hold **robot** rules (`dimensions_mm`, `max_sensors`, `allowed_mcus`, …) and no track geometry.
 - `run.profile_id` references `profile.id` with `ON DELETE RESTRICT`.
+- **Update 2026-11-03:** the branch `feat/EN-28-tracks-api` was pushed and PR #7 was merged into `main` on 2026-10-28, so migrations `0006` and `0007` are immutable. Requirement 9 (perimeter and area) therefore needs a new additive migration `0008`. Whether Render already applied `0006`/`0007` (auto-deploy from `main`) is **not verified**.
 - Pagination shape already used (`RunsPage`): `{items, total, limit, offset}`, `limit` 1–200 (default 50).
 - Business errors: `{"detail": {"reason", "detail"}}`; `Validation`→422, `NotFound`→404, `Conflict`→409; request-parsing errors use the FastAPI 422 format.
 - `AUTH_REQUIRED` middleware protects every `/api/*` path except `/api/health`, `/api/auth/login`, `/api/runs/ingest`; `/api/tracks` would be protected automatically.
@@ -151,6 +154,23 @@ there is a single place to read rules.
 4. THE suite SHALL include a test that upgrades and downgrades the migration.
 5. WHERE `TRACKS_LIVE_TEST=1`, THE suite SHALL run an opt-in test against the deployed API that creates, reads and deletes its own track.
 
+### Requirement 9: Perímetro y área guardados por pista
+
+**User Story:** As a pilot, I want each track to keep its total length, perimeter and area, so that
+the console can show them without recomputing and later stories can use them.
+
+#### Acceptance Criteria
+
+1. THE API SHALL accept the optional fields `perimeter_cm` and `area_cm2` on `POST` and `PUT` (null allowed and the default when omitted), store them exactly as sent, and return them in every read (`list`, `get`, `create`, `update`) and in the export.
+2. WHEN `perimeter_cm` is not null, THE API SHALL require `0 <= perimeter_cm <= 400000` and SHALL otherwise answer 422. _Proposed cap, pending the PO: four times the `length_cm` cap (100000), a margin over rounding of the client._
+3. WHEN `area_cm2` is not null, THE API SHALL require `0 <= area_cm2 <= 4 × (board.width_cm × board.height_cm)` and SHALL otherwise answer 422 with reason `track_metrics_invalid`. _Proposed cap, pending the PO: points may lie outside the board, so the cap is 4 times the board area; its purpose is to catch unit mistakes such as square metres sent as square centimetres (a factor of 10^4)._
+4. IF `closed` is false and `perimeter_cm` or `area_cm2` is not null, THEN THE API SHALL answer 422 with reason `track_metrics_invalid`.
+5. THE API SHALL reject non-finite values (`NaN`, `Infinity`) of both fields with 422 (`track_not_finite` from the domain, or the parsing list from the schema).
+6. THE OpenAPI schemas SHALL state the units: `perimeter_cm` in centimetres and `area_cm2` in square centimetres, and that both are null for open tracks (and `area_cm2` also when the line crosses itself).
+7. THE API SHALL NOT recompute the perimeter or the area; WHEN a `PUT` omits or nulls them, THE API SHALL clear them.
+8. THE schema change SHALL be a separate additive Alembic revision `0008` that adds the two nullable columns and `CHECK` constraints; existing rows SHALL keep NULL, and its downgrade SHALL drop the columns without refusing (derived values the frontend can recompute).
+9. THE suite SHALL include unit, repository, route, contract and migration up/down tests for both fields.
+
 ## Open questions (for the PO; not resolved here)
 
 | # | Question | Recommendation |
@@ -163,7 +183,13 @@ there is a single place to read rules.
 | 6 | Export shape: plain object or wrapper `{format, version, track}`? | The frontend accepts the plain object, the wrapper and the prototype's `v: 2` format on import. Recommend plain object now (as `GET /{id}`) and the wrapper only if the PO wants versioned files; the backend produces one shape only |
 | 7 | `PUT` without concurrency control (last write wins)? | Accept last-write-wins for EN-28 (one admin account, single console in practice); add an `updated_at`/`If-Match` check later if several consoles edit the same track |
 
+| 8 | Are the caps right: `perimeter_cm <= 400000`, `area_cm2 <= 4 × board area`? | Keep them as sanity bounds (they catch unit errors, not geometry errors). The PO may tighten the area cap to the board area if points are never allowed outside the board |
+| 9 | Recompute perimeter and area in the backend later (EN-34 service, Gauss, scale 1:N)? | Optional future task 8.7; today the backend trusts the frontend, like `length_cm` |
+
 Decisions recorded (not questions):
+
+- **Perimeter and area need a new migration.** `0006` was merged in PR #7, so the columns are added by `0008` (requirement 9.8), never by editing `0006`.
+- **One new reason, `track_metrics_invalid`,** covers an area above the cap, a perimeter outside its range (domain level) and metrics on an open track; the 14 existing reasons are unchanged.
 
 - **Field-level errors are parsed by the frontend.** The frontend reads the FastAPI/Pydantic `detail` list (`loc`, `msg`); the backend keeps its format (requirement 6.6). The frontend must branch on `Array.isArray(detail)`.
 
