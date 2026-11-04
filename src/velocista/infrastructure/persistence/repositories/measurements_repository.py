@@ -315,6 +315,14 @@ class SqlAlchemyMeasurementsRepository:
         )
         return [_gps_trial(row) for row in rows]
 
+    def delete_gps_trial(self, trial_id):
+        row = self.session.get(GpsTrialModel, trial_id)
+        if row is None:
+            return False
+        self.session.delete(row)
+        self.session.commit()
+        return True
+
     # --- modelo de precisión
     def add_model_run(self, run):
         row = PrecisionModelRunModel(

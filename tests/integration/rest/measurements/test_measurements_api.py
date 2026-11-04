@@ -217,6 +217,41 @@ class TestGpsError:
         assert summary["min_side_m"] > 0
         assert set(summary["by_environment"]) == {"open", "buildings"}
 
+    def test_mistaken_trial_can_be_deleted(self, client):
+        body = {
+            "device_id": PHONE,
+            "place_name": "Equivocada",
+            "environment": "open",
+            "real_distance_m": 30,
+            "start_fixes": self.fixes(0, 1),
+            "end_fixes": self.fixes(30, 2),
+        }
+        trial = client.post("/api/gps-trials", json=body).json()
+        assert client.delete(f"/api/gps-trials/{trial['id']}").status_code == 204
+        assert client.get("/api/gps-trials", params={"device_id": PHONE}).json() == []
+        summary = client.get("/api/gps-trials/summary", params={"device_id": PHONE}).json()
+        assert summary["trials"] == 0
+        missing = client.delete(f"/api/gps-trials/{trial['id']}")
+        assert missing.status_code == 404
+        assert missing.json()["detail"]["reason"] == "gps_trial_not_found"
+
+    def test_round_trip_trial_uses_meters_only(self, client):
+        response = client.post(
+            "/api/gps-trials",
+            json={
+                "device_id": PHONE,
+                "place_name": "Ida y vuelta en carro",
+                "environment": "open",
+                "real_distance_m": 0,
+                "start_fixes": self.fixes(0, 3),
+                "end_fixes": self.fixes(0, 4),
+            },
+        )
+        assert response.status_code == 201, response.text
+        single = response.json()["result"]["methods"]["single"]
+        assert single["error_pct"] is None
+        assert single["error_m"] == pytest.approx(single["gps_distance_m"])
+
     def test_trial_needs_three_fixes(self, client):
         response = client.post(
             "/api/gps-trials",

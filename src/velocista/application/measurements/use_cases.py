@@ -214,6 +214,11 @@ class GpsErrorService:
     def list(self, device_id: str | None = None) -> list[GpsTrial]:
         return self.repository.list_gps_trials(device_id)
 
+    def delete(self, trial_id: int) -> None:
+        """Borra una prueba equivocada; el resumen deja de contarla."""
+        if not self.repository.delete_gps_trial(trial_id):
+            raise NotFound("gps_trial_not_found", "GPS trial does not exist")
+
     def summary(self, device_id: str | None = None, target_pct: float = 10.0) -> dict:
         trials = self.repository.list_gps_trials(device_id)
         out = gps_mod.trials_summary([t.result for t in trials], target_pct)

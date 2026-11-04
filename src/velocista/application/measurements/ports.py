@@ -56,6 +56,10 @@ class MeasurementsRepository(Protocol):
 
     def list_gps_trials(self, device_id: str | None) -> list[GpsTrial]: ...
 
+    def delete_gps_trial(self, trial_id: int) -> bool:
+        """Borra una prueba del GPS. False si no existía."""
+        ...
+
     # --- modelo de precisión (SP-07)
     def add_model_run(self, run: ModelRun) -> ModelRun: ...
 

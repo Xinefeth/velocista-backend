@@ -330,6 +330,24 @@ def list_gps_trials(service: GpsErrors, device_id: DeviceQuery = None):
     return [GpsTrialOut.from_entity(t) for t in service.list(device_id)]
 
 
+@gps_trials.delete(
+    "/{trial_id}",
+    status_code=204,
+    operation_id="deleteGpsTrial",
+    summary="Delete a GPS error trial",
+    description=(
+        "Deletes a mistaken trial permanently and answers 204 with no body; the summary stops "
+        "counting it."
+    ),
+    responses=error_responses(
+        {401: UNAUTHORIZED, 404: "GPS trial does not exist (`gps_trial_not_found`)"}
+    ),
+)
+def delete_gps_trial(trial_id: MeasurementId, service: GpsErrors):
+    service.delete(trial_id)
+    return Response(status_code=204)
+
+
 @gps_trials.get(
     "/summary",
     operation_id="getGpsErrorSummary",
