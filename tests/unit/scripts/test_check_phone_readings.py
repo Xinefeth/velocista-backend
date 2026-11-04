@@ -380,3 +380,177 @@ def test_token_is_read_from_the_environment_and_never_printed(monkeypatch, capsy
     captured = capsys.readouterr()
     assert set(seen.values()) == {secret}
     assert secret not in captured.out + captured.err
+
+
+# ------------------------------------------------------------------ --device / --list / --latest
+
+
+def measurement_row(mid, device, started, method="steps", status="finished", count=100):
+    return {
+        "id": mid,
+        "device_id": device,
+        "method": method,
+        "status": status,
+        "reading_count": count,
+        "started_at": started,
+        "place_name": "LUGAR-SECRETO",
+    }
+
+
+UUID_A = "cel-a8b62dcb-1111-4222-8333-444455556666"
+UUID_B = "cel-0f0f0f0f-1111-4222-8333-444455556666"
+ROWS = [  # más recientes primero, como responde la API
+    measurement_row(9, UUID_B, "2026-11-04T12:00:00Z"),
+    measurement_row(8, UUID_A, "2026-11-04T11:00:00Z", count=2500),
+    measurement_row(7, UUID_B, "2026-11-04T10:00:00Z"),
+    measurement_row(6, UUID_A, "2026-11-04T09:00:00Z", method="gps", status="recording"),
+]
+
+
+def test_device_code_is_normalized():
+    assert chk.normalize_device_code("A8B62DCB") == "a8b62dcb"
+    assert chk.normalize_device_code(" cel-a8b62dcb ") == "a8b62dcb"
+    for bad in ("", "abc", "a8b6 2dcb", "a8b6/../"):
+        with pytest.raises(chk.ApiError):
+            chk.normalize_device_code(bad)
+
+
+def test_measurements_of_a_device_are_filtered_by_prefix():
+    found = chk.measurements_of_device(ROWS, "a8b62dcb")
+    assert [m["id"] for m in found] == [8, 6]
+    assert chk.latest_measurement(found)["id"] == 8
+
+
+def test_longer_code_and_prefix_also_match():
+    assert len(chk.measurements_of_device(ROWS, "cel-a8b62dcb-1111")) == 2
+
+
+def test_ambiguous_code_is_not_guessed():
+    rows = ROWS + [
+        measurement_row(10, "cel-a8b62dcb-9999-4222-8333-444455556666", "2026-11-04T13:00:00Z")
+    ]
+    with pytest.raises(chk.ApiError, match="coincide con 2 celulares"):
+        chk.measurements_of_device(rows, "a8b62dcb")
+    # con un código más largo ya no es ambiguo
+    assert [m["id"] for m in chk.measurements_of_device(rows, "a8b62dcb-9999")] == [10]
+
+
+def test_unknown_device_gives_no_measurements():
+    assert chk.measurements_of_device(ROWS, "deadbeef") == []
+
+
+def test_list_is_short_and_never_shows_place_or_coordinates():
+    text = chk.render_device_list(chk.measurements_of_device(ROWS, "a8b62dcb"))
+    assert "LUGAR-SECRETO" not in text
+    assert "2500" in text and "recording" in text and "2026-11-04T11:00:00Z" in text
+    assert "LUGAR-SECRETO" not in chk.device_list_json(ROWS)
+
+
+def fake_api(monkeypatch, readings=None):
+    calls = []
+
+    def fake_request(method, url, token, body=None):
+        calls.append((url, token))
+        if "/api/measurements?" in url:
+            return {"items": ROWS, "total": len(ROWS), "limit": 200, "offset": 0}
+        if url.endswith("/readings"):
+            return readings if readings is not None else rest_readings()
+        return next(dict(r) for r in ROWS if url.endswith(f"/{r['id']}"))
+
+    monkeypatch.setattr(chk, "api_request", fake_request)
+    return calls
+
+
+def test_main_device_list(monkeypatch, capsys):
+    fake_api(monkeypatch)
+    assert chk.main(["http://127.0.0.1:8000", "--device", "a8b62dcb", "--list"]) == 0
+    out = capsys.readouterr().out
+    assert "2 mediciones" in out and "LUGAR-SECRETO" not in out
+
+
+def test_main_device_latest_analyses_the_newest_measurement(monkeypatch, capsys):
+    calls = fake_api(monkeypatch)
+    code = chk.main(["http://127.0.0.1:8000", "--device", "a8b62dcb", "--latest", "--step", "rest"])
+    out = capsys.readouterr().out
+    assert code == 0
+    assert "Medición 8" in out and "LUGAR-SECRETO" not in out
+    assert calls[-1][0].endswith("/api/measurements/8/readings")
+
+
+def test_main_device_errors(monkeypatch, capsys):
+    fake_api(monkeypatch)
+    base = "http://127.0.0.1:8000"
+    assert chk.main([base, "--device", "deadbeef", "--list"]) == 2  # sin mediciones
+    assert chk.main([base, "--device", "a8b62dcb"]) == 2  # falta --list o --latest
+    assert chk.main([base, "--list"]) == 2  # falta --device
+    assert chk.main([base, "--device", "a8b62dcb", "--list", "--latest"]) == 2
+    assert chk.main([base, "5", "--device", "a8b62dcb", "--latest"]) == 2  # id y --device
+    assert chk.main(["--file", "x.json", "--device", "a8b62dcb", "--list"]) == 2
+    assert "Error" in capsys.readouterr().err
+
+
+def test_main_ambiguous_device_does_not_analyse(monkeypatch, capsys):
+    rows = ROWS + [
+        measurement_row(10, "cel-a8b62dcb-9999-4222-8333-444455556666", "2026-11-04T13:00:00Z")
+    ]
+    monkeypatch.setattr(
+        chk, "api_request", lambda m, u, t, b=None: {"items": rows, "total": len(rows)}
+    )
+    assert chk.main(["http://127.0.0.1:8000", "--device", "a8b62dcb", "--latest"]) == 2
+    assert "usa un código más largo" in capsys.readouterr().err
+
+
+def test_device_options_keep_the_token_safe(monkeypatch, capsys):
+    secret = "tok-secreto-de-prueba-456"
+    monkeypatch.setenv("VELOCISTA_TOKEN", secret)
+    calls = fake_api(monkeypatch)
+    chk.main(["http://127.0.0.1:8000", "--device", "a8b62dcb", "--latest"])
+    captured = capsys.readouterr()
+    assert {token for _, token in calls} == {secret}
+    assert secret not in captured.out + captured.err
+    with pytest.raises(chk.ApiError):  # http fuera de localhost sigue prohibido
+        chk._check_base_url("http://mi-api.example.com", False)
+
+
+def test_listing_pages_through_every_measurement_with_a_real_http_server():
+    """urllib de verdad contra un servidor local de prueba: URL, paginación y cabecera."""
+    import threading
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+    from urllib.parse import parse_qs, urlsplit
+
+    rows = [
+        measurement_row(i, UUID_B, f"2026-11-04T{i % 24:02d}:00:00Z") for i in range(450, 0, -1)
+    ]
+    rows[-3] = measurement_row(
+        3, UUID_A, "2026-11-04T01:00:00Z"
+    )  # el de a8b62dcb está en la última página
+    seen = []
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            parts = urlsplit(self.path)
+            q = parse_qs(parts.query)
+            limit, offset = int(q["limit"][0]), int(q["offset"][0])
+            seen.append((parts.path, offset, self.headers.get("Authorization")))
+            body = json.dumps({"items": rows[offset : offset + limit], "total": len(rows)}).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, *args):
+            pass
+
+    server = HTTPServer(("127.0.0.1", 0), Handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        base = f"http://127.0.0.1:{server.server_port}"
+        items = chk.list_all_measurements(base, "tok-de-prueba")
+    finally:
+        server.shutdown()
+        server.server_close()
+    assert len(items) == 450
+    assert [offset for _, offset, _ in seen] == [0, 200, 400]
+    assert {auth for _, _, auth in seen} == {"Bearer tok-de-prueba"}
+    assert [m["id"] for m in chk.measurements_of_device(items, "a8b62dcb")] == [3]

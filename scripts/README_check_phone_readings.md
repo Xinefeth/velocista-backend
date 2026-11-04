@@ -41,6 +41,30 @@ celular; la API no lo guarda), `--json` (informe en JSON).
 
 Código de salida: `0` apto (o con avisos), `1` alguna comprobación falló, `2` error de uso o de red.
 
+## Si solo tienes el código del celular
+
+La página del celular muestra un código de 8 caracteres (por ejemplo `a8b62dcb`), no el id numérico de la
+medición. El `device_id` guardado es `cel-<uuid>` y el código es el primer trozo del uuid. Con `--device`
+no hace falta saber el id:
+
+```powershell
+# Ver las mediciones de ese celular (id, método, estado, nº de lecturas, fecha de inicio)
+python scripts/check_phone_readings.py https://TU-API.onrender.com --device a8b62dcb --list --login admin
+
+# Analizar la más reciente de ese celular (con --step o general)
+python scripts/check_phone_readings.py https://TU-API.onrender.com --device a8b62dcb --latest --login admin --step rest
+```
+
+- El código se compara con el inicio del `device_id` (el filtro `device_id` de la API es exacto, así que el
+  script pide todas las mediciones página a página y filtra él). Se acepta con o sin `cel-`, en mayúsculas o
+  minúsculas.
+- Si el código coincide con **más de un** celular, el script avisa, muestra los `device_id` y **no adivina**:
+  usa un código más largo (por ejemplo `a8b62dcb-1111`).
+- `--list` y `--latest` no se pueden combinar entre sí, ni con el id de la medición ni con `--file`.
+- La lista no muestra el lugar ni coordenadas. Con `--json` se imprime en JSON.
+- Se mantienen las reglas de seguridad: el token sale de `VELOCISTA_TOKEN` o de `--login` (clave por
+  `getpass`, token solo en memoria), nunca se imprime, y `http://` solo se acepta en localhost.
+
 ## Contra Render sin guardar la contraseña
 
 1. Usa `--login USUARIO`: el script pide la clave con `getpass` (no se ve al escribir), la envía solo a
