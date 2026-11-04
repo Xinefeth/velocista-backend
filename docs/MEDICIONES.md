@@ -148,6 +148,10 @@ Es un **ajuste por refuerzo simple** (prueba y error con castigo, del tipo Twidd
 > y el error de cierre se corrige con el **sesgo del giroscopio**. Por eso el castigo usa los dos
 > errores. Para SP-07 hace falta medir un lugar **con medidas conocidas**.
 
+La **evaluación** (algoritmo solo frente a modelo, curva por intento y resultados con datos
+reales) está en [EVALUACION_MODELO.md](EVALUACION_MODELO.md):
+`POST /api/precision-model/evaluations`.
+
 ## 5. Precisión comprobada (simulador de pruebas, no datos reales)
 
 | Prueba | Resultado |
