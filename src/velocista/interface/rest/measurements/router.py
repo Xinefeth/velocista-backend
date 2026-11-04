@@ -161,11 +161,16 @@ def ingest_readings(measurement_id: MeasurementId, data: ReadingsBatchIn, servic
     response_model=list[ReadingOut],
     operation_id="listMeasurementReadings",
     summary="Raw readings of a measurement",
-    description="Every stored reading ordered by time, to audit or re-process a walk. " + UNITS,
+    description=(
+        "Every stored reading ordered by time, to audit or re-process a walk. Each reading "
+        "carries the `mount` (`hand` or `robot`) of its measurement; `method: car` implies "
+        "`robot`. " + UNITS
+    ),
     responses=error_responses({401: UNAUTHORIZED, 404: NOT_FOUND}),
 )
 def list_readings(measurement_id: MeasurementId, service: Measurements):
-    return [ReadingOut.from_entity(r) for r in service.readings(measurement_id)]
+    mount, readings = service.readings_with_mount(measurement_id)
+    return [ReadingOut.from_entity(r, mount) for r in readings]
 
 
 @measurements.post(

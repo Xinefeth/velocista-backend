@@ -245,7 +245,8 @@ en m², giros en **grados**.
 Cuerpo: `{"readings": [ReadingIn, …]}` con **1 a 1000 lecturas por lote**. Lo recomendado es un lote cada
 **0,5 s**. Un lote vacío o de más de 1000 lecturas se rechaza entero con **422** y no se guarda nada.
 
-**`ReadingIn`** (los campos desconocidos se ignoran):
+**`ReadingIn`** (los campos desconocidos se ignoran; en particular, un `mount` dentro de una lectura
+se ignora: el montaje es de la medición):
 
 | Campo | Tipo | Unidad | Descripción |
 |---|---|---|---|
@@ -336,8 +337,14 @@ Respuesta (la lectura 3 tiene `lat` fuera de rango):
 ```
 
 **`GET /api/measurements/{id}/readings`** devuelve una lista de `ReadingOut` con `seq`, `t_ms`, `kind`,
-`gyro_z_dps`, `accel`, `step`, `pwm`, `lat`, `lon` y `accuracy_m` (los ausentes salen `null`), ordenada por
-tiempo.
+`gyro_z_dps`, `accel`, `step`, `pwm`, `lat`, `lon` y `accuracy_m` (los ausentes salen `null`) y **`mount`**
+(`hand` o `robot`), ordenada por tiempo.
+
+**`mount` en cada lectura (EN-32, criterio 2).** Cada lectura que devuelve la API indica si el celular iba
+en la mano (`hand`) o sobre el robot (`robot`). El valor **se hereda de la medición** (`MeasurementIn.mount`):
+no se guarda por lectura, el celular no lo envía y todas las lecturas de una medición devuelven el mismo
+valor. `method: "car"` implica `mount: "robot"`. Si el celular manda `mount` dentro de una lectura, se
+ignora. Es un campo añadido a la salida: los clientes que no lo conocen siguen funcionando.
 
 **Tiempo de respuesta.** Un lote de 25 y uno de 1000 lecturas se responden en menos de 1 s; lo comprueba
 `tests/integration/rest/measurements/test_ingest_latency.py` contra PostgreSQL local. El tiempo de punta a

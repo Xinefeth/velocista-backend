@@ -707,6 +707,7 @@ def analyse(
     for r in readings:
         kinds[str(r.get("kind"))] = kinds.get(str(r.get("kind")), 0) + 1
     mags = accel_magnitudes(of_kind(windowed, "motion"))
+    mounts = sorted({str(r["mount"]) for r in readings if r.get("mount") is not None})
     sections = {
         "integridad": integrity_findings(readings, meta),
         "datos_falsos": fake_data_findings(readings, user_agent, meta),
@@ -715,6 +716,7 @@ def analyse(
     summary = {
         "readings": len(readings),
         "kinds": kinds,
+        "mounts": mounts,  # dato informativo; las lecturas antiguas no lo traen
         "window_readings": len(windowed),
         "accel_mean_ms2": statistics.fmean(mags) if mags else None,
         "gyro_integral": integrate_gyro(windowed, bias_dps),
@@ -745,6 +747,11 @@ def render(result: dict, meta: dict | None = None) -> str:
     kinds = ", ".join(f"{k} {v}" for k, v in sorted(s["kinds"].items())) or "ninguna"
     lines.append(
         f"Lecturas: {s['readings']} ({kinds}); en la ventana analizada: {s['window_readings']}"
+    )
+    mounts = s.get("mounts") or []
+    lines.append(
+        "Montaje de las lecturas: "
+        + (", ".join(mounts) if mounts else "no informado (lecturas sin el campo mount)")
     )
     seq, tim = s["seq"], s["time"]
     lines.append(

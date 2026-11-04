@@ -41,6 +41,10 @@ celular; la API no lo guarda), `--json` (informe en JSON).
 
 Código de salida: `0` apto (o con avisos), `1` alguna comprobación falló, `2` error de uso o de red.
 
+El informe muestra también, como dato informativo, el **montaje** (`mount`: `hand` o `robot`) que la API
+devuelve en cada lectura (se hereda de la medición). No cambia el veredicto. Los JSON antiguos sin ese
+campo (`--file`) siguen funcionando y salen como «no informado».
+
 ## Si solo tienes el código del celular
 
 La página del celular muestra un código de 8 caracteres (por ejemplo `a8b62dcb`), no el id numérico de la
