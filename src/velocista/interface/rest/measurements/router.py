@@ -37,6 +37,7 @@ from velocista.interface.rest.measurements.schemas import (
     CarCalibrationIn,
     GpsTrialIn,
     GpsTrialOut,
+    GpsTrialRenameIn,
     GyroCalibrationIn,
     IngestReportOut,
     MeasurementIn,
@@ -328,6 +329,20 @@ def create_gps_trial(data: GpsTrialIn, service: GpsErrors):
 )
 def list_gps_trials(service: GpsErrors, device_id: DeviceQuery = None):
     return [GpsTrialOut.from_entity(t) for t in service.list(device_id)]
+
+
+@gps_trials.patch(
+    "/{trial_id}",
+    response_model=GpsTrialOut,
+    operation_id="renameGpsTrial",
+    summary="Rename a GPS error trial",
+    description="Fixes the place name only; readings and errors stay the same.",
+    responses=error_responses(
+        {401: UNAUTHORIZED, 404: "GPS trial does not exist (`gps_trial_not_found`)", 422: INVALID}
+    ),
+)
+def rename_gps_trial(trial_id: MeasurementId, data: GpsTrialRenameIn, service: GpsErrors):
+    return GpsTrialOut.from_entity(service.rename(trial_id, data.place_name))
 
 
 @gps_trials.delete(

@@ -56,6 +56,10 @@ class MeasurementsRepository(Protocol):
 
     def list_gps_trials(self, device_id: str | None) -> list[GpsTrial]: ...
 
+    def rename_gps_trial(self, trial_id: int, place_name: str) -> GpsTrial | None:
+        """Cambia el nombre del lugar. None si no existía."""
+        ...
+
     def delete_gps_trial(self, trial_id: int) -> bool:
         """Borra una prueba del GPS. False si no existía."""
         ...

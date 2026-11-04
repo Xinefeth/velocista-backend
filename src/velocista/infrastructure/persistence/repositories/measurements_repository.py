@@ -315,6 +315,14 @@ class SqlAlchemyMeasurementsRepository:
         )
         return [_gps_trial(row) for row in rows]
 
+    def rename_gps_trial(self, trial_id, place_name):
+        row = self.session.get(GpsTrialModel, trial_id)
+        if row is None:
+            return None
+        row.place_name = place_name
+        self.session.commit()
+        return _gps_trial(row)
+
     def delete_gps_trial(self, trial_id):
         row = self.session.get(GpsTrialModel, trial_id)
         if row is None:

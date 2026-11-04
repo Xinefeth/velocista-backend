@@ -214,6 +214,16 @@ class GpsErrorService:
     def list(self, device_id: str | None = None) -> list[GpsTrial]:
         return self.repository.list_gps_trials(device_id)
 
+    def rename(self, trial_id: int, place_name: str) -> GpsTrial:
+        """Corrige el nombre del lugar; las lecturas y el resultado no cambian."""
+        place_name = place_name.strip()
+        if not 1 <= len(place_name) <= PLACE_MAX:
+            raise Validation("gps_trial_place", f"place_name needs 1 to {PLACE_MAX} characters")
+        trial = self.repository.rename_gps_trial(trial_id, place_name)
+        if trial is None:
+            raise NotFound("gps_trial_not_found", "GPS trial does not exist")
+        return trial
+
     def delete(self, trial_id: int) -> None:
         """Borra una prueba equivocada; el resumen deja de contarla."""
         if not self.repository.delete_gps_trial(trial_id):

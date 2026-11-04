@@ -377,6 +377,10 @@ class FixIO(_Strict):
         return Fix(self.t_ms, self.lat, self.lon, self.accuracy_m)
 
 
+class GpsTrialRenameIn(_Strict):
+    place_name: str = Field(min_length=1, max_length=limits.PLACE_MAX, examples=["Calle Bolívar"])
+
+
 class GpsTrialIn(_Strict):
     model_config = ConfigDict(
         extra="forbid",

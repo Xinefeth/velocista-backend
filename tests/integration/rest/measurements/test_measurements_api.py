@@ -235,6 +235,24 @@ class TestGpsError:
         assert missing.status_code == 404
         assert missing.json()["detail"]["reason"] == "gps_trial_not_found"
 
+    def test_trial_can_be_renamed_without_changing_its_result(self, client):
+        body = {
+            "device_id": PHONE,
+            "place_name": "Casa",
+            "environment": "open",
+            "real_distance_m": 30,
+            "start_fixes": self.fixes(0, 5),
+            "end_fixes": self.fixes(30, 6),
+        }
+        trial = client.post("/api/gps-trials", json=body).json()
+        url = f"/api/gps-trials/{trial['id']}"
+        renamed = client.patch(url, json={"place_name": "  Calle Bolívar "})
+        assert renamed.status_code == 200, renamed.text
+        assert renamed.json()["place_name"] == "Calle Bolívar"
+        assert renamed.json()["result"] == trial["result"]
+        assert client.patch(url, json={"place_name": "   "}).status_code == 422
+        assert client.patch("/api/gps-trials/999999", json={"place_name": "x"}).status_code == 404
+
     def test_round_trip_trial_uses_meters_only(self, client):
         response = client.post(
             "/api/gps-trials",
