@@ -38,6 +38,10 @@ class MeasurementsRepository(Protocol):
         self, measurement_id: int, result: Result, finished_at: datetime
     ) -> Measurement: ...
 
+    def delete_measurement(self, measurement_id: int) -> bool:
+        """Borra la medición y sus lecturas. False si no existía."""
+        ...
+
     # --- calibraciones (EN-35)
     def add_calibration(self, record: CalibrationRecord) -> CalibrationRecord: ...
 

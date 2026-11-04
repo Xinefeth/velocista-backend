@@ -251,6 +251,15 @@ class SqlAlchemyMeasurementsRepository:
         self.session.commit()
         return _measurement(row)
 
+    def delete_measurement(self, measurement_id):
+        # Las lecturas se borran con ella (ON DELETE CASCADE en measurement_reading).
+        row = self.session.get(MeasurementModel, measurement_id)
+        if row is None:
+            return False
+        self.session.delete(row)
+        self.session.commit()
+        return True
+
     # --- calibraciones
     def add_calibration(self, record):
         row = SensorCalibrationModel(

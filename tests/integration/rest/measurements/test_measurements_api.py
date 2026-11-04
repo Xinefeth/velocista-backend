@@ -279,3 +279,32 @@ class TestAdaptiveStepThreshold:
         send(client, m["id"], walk_readings(step_accel=1.0, gyro_noise_dps=0.3, seed=9))
         result = client.post(f"{MEASUREMENTS}/{m['id']}/finish").json()["result"]
         assert abs(result["perimeter_error_pct"]) < 3
+
+
+class TestDeleteMeasurement:
+    def test_deleted_measurement_and_its_readings_are_gone(self, client):
+        calibrate(client)
+        wrong = measure(client)
+        kept = measure(client, seed=2)
+        response = client.delete(f"{MEASUREMENTS}/{wrong['id']}")
+        assert response.status_code == 204
+        assert client.get(f"{MEASUREMENTS}/{wrong['id']}").status_code == 404
+        assert client.get(f"{MEASUREMENTS}/{wrong['id']}/readings").status_code == 404
+        page = client.get(MEASUREMENTS, params={"device_id": PHONE}).json()
+        assert [m["id"] for m in page["items"]] == [kept["id"]]
+        assert (
+            len(client.get(f"{MEASUREMENTS}/{kept['id']}/readings").json())
+            == (kept["reading_count"])
+        )
+
+    def test_cancelled_recording_can_be_deleted_and_keeps_calibration(self, client):
+        calibrate(client)
+        m = start(client)
+        send(client, m["id"], walk_readings()[:100])
+        assert client.delete(f"{MEASUREMENTS}/{m['id']}").status_code == 204
+        assert client.get(f"{CALIBRATIONS}/{PHONE}").json()["ready"]["steps"] is True
+
+    def test_unknown_measurement_cannot_be_deleted(self, client):
+        response = client.delete(f"{MEASUREMENTS}/999999")
+        assert response.status_code == 404
+        assert response.json()["detail"]["reason"] == "measurement_not_found"

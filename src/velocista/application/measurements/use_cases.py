@@ -131,6 +131,11 @@ class MeasurementsService:
         result = compute_result(m, self.repository.get_readings(measurement_id))
         return self.repository.save_result(measurement_id, result, datetime.now(UTC))
 
+    def delete(self, measurement_id: int) -> None:
+        """Borra una medición equivocada o cancelada, con todas sus lecturas."""
+        if not self.repository.delete_measurement(measurement_id):
+            raise NotFound("measurement_not_found", "Measurement does not exist")
+
 
 class CalibrationService:
     def __init__(self, repository: MeasurementsRepository):

@@ -7,13 +7,14 @@ Flujo del celular (EN-32 a EN-35):
 3. POST /api/measurements                      empezar (copia la calibración vigente)
 4. POST /api/measurements/{id}/readings        cada ~0,5 s un lote de lecturas
 5. POST /api/measurements/{id}/finish          calcular perímetro, área y error de cierre
+6. DELETE /api/measurements/{id}               borrar una equivocada o cancelada
 """
 
 from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Path, Query
+from fastapi import APIRouter, Depends, Path, Query, Response
 
 from velocista.application.measurements.use_cases import (
     CalibrationService,
@@ -178,6 +179,22 @@ def list_readings(measurement_id: MeasurementId, service: Measurements):
 )
 def finish_measurement(measurement_id: MeasurementId, service: Measurements):
     return MeasurementOut.from_entity(service.finish(measurement_id))
+
+
+@measurements.delete(
+    "/{measurement_id}",
+    status_code=204,
+    operation_id="deleteMeasurement",
+    summary="Delete a measurement",
+    description=(
+        "Deletes the measurement and all its readings permanently (a mistaken or cancelled "
+        "walk) and answers 204 with no body. Calibrations and GPS trials are kept."
+    ),
+    responses=error_responses({401: UNAUTHORIZED, 404: NOT_FOUND}),
+)
+def delete_measurement(measurement_id: MeasurementId, service: Measurements):
+    service.delete(measurement_id)
+    return Response(status_code=204)
 
 
 # ------------------------------------------------------------------ calibración (EN-35)
