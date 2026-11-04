@@ -43,6 +43,8 @@ from velocista.interface.rest.measurements.schemas import (
     MeasurementIn,
     MeasurementOut,
     MeasurementsPage,
+    ModelEvaluationIn,
+    ModelEvaluationOut,
     ModelRunIn,
     ModelRunOut,
     ReadingOut,
@@ -415,6 +417,23 @@ def run_model(data: ModelRunIn, service: Model):
 )
 def list_runs(service: Model, device_id: DeviceQuery = None):
     return [ModelRunOut.from_entity(r) for r in service.list(device_id)]
+
+
+@precision.post(
+    "/evaluations",
+    response_model=ModelEvaluationOut,
+    operation_id="evaluatePrecisionModel",
+    summary="Compare the algorithm alone with the algorithm plus the precision model",
+    description=(
+        "SP-07 evaluation. Baseline = closure error (m and %) of each measurement with the "
+        "calibration it was measured with; model = the same after tuning. `curve` gives the mean "
+        "closure error by attempt with and without the model; `verdict` compares it with the "
+        "green limit (< 3 %). Nothing is saved and the phone calibration does not change."
+    ),
+    responses=error_responses({401: UNAUTHORIZED, 404: NOT_FOUND, 422: INVALID}),
+)
+def evaluate_model(data: ModelEvaluationIn, service: Model):
+    return service.evaluate(data.measurement_ids, data.max_attempts)
 
 
 router = APIRouter()

@@ -311,6 +311,47 @@ class TestPrecisionModel:
         assert response.status_code == 404
 
 
+class TestPrecisionModelEvaluation:
+    def test_evaluation_compares_algorithm_and_model_without_saving(self, client):
+        calibrate(client, bias=0.0, steps=(26, 26, 26))
+        ids = [measure(client, seed=s)["id"] for s in range(3)]
+        response = client.post(
+            "/api/precision-model/evaluations",
+            json={"measurement_ids": ids, "max_attempts": 30},
+        )
+        assert response.status_code == 200, response.text
+        out = response.json()
+        assert out["train_count"] == 2
+        assert out["holdout_measurement_id"] == ids[-1]
+        assert out["model"]["mean_closure_error_pct"] < out["baseline"]["mean_closure_error_pct"]
+        assert out["verdict"] in {"improves_green", "improves_not_green"}
+        assert len(out["curve"]) == 31
+        # evaluar no guarda corridas ni cambia la calibración del celular
+        assert client.get("/api/precision-model/runs").json() == []
+        state = client.get(f"{CALIBRATIONS}/{PHONE}").json()
+        assert state["records"]["step_length"]["origin"] == "manual"
+
+    def test_evaluation_needs_existing_measurements(self, client):
+        response = client.post(
+            "/api/precision-model/evaluations", json={"measurement_ids": [999998, 999999]}
+        )
+        assert response.status_code == 404
+        assert response.json()["detail"]["reason"] == "measurement_not_found"
+
+    def test_evaluation_rejects_a_single_measurement(self, client):
+        response = client.post("/api/precision-model/evaluations", json={"measurement_ids": [1]})
+        assert response.status_code == 422
+
+    def test_evaluation_rejects_repeated_ids(self, client):
+        calibrate(client)
+        mid = measure(client)["id"]
+        response = client.post(
+            "/api/precision-model/evaluations", json={"measurement_ids": [mid, mid]}
+        )
+        assert response.status_code == 422
+        assert response.json()["detail"]["reason"] == "model_repeated_ids"
+
+
 class TestAdaptiveStepThreshold:
     def test_soft_walker_is_learned_and_measured(self, client):
         # pisa suave: con la regla fija (1,2) casi no se contaban sus pasos

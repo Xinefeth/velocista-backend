@@ -46,7 +46,7 @@ def _params_of(m: Measurement) -> dict[str, float]:
     return params
 
 
-def _with(m: Measurement, params: dict[str, float]) -> Measurement:
+def with_params(m: Measurement, params: dict[str, float]) -> Measurement:
     cal = replace(m.calibration, gyro_bias_dps=params["gyro_bias_dps"])
     if "step_length_m" in params:
         low, high = STEP_RANGE
@@ -57,7 +57,7 @@ def _with(m: Measurement, params: dict[str, float]) -> Measurement:
 
 
 def _metrics(m: Measurement, readings: Sequence[Reading], params: dict[str, float]) -> dict:
-    r = compute_result(_with(m, params), readings)
+    r = compute_result(with_params(m, params), readings)
     return {
         "closure_error_pct": r.closure_error_pct,
         "perimeter_error_pct": r.perimeter_error_pct,

@@ -28,6 +28,7 @@ from velocista.domain.measurements.entities import (
     ModelRun,
     Reading,
 )
+from velocista.domain.measurements.evaluation import evaluate
 from velocista.domain.measurements.odometry import (
     adaptive_threshold,
     detect_steps,
@@ -256,19 +257,9 @@ class PrecisionModelService:
         Con `apply`, los parámetros ajustados se guardan como la calibración vigente del celular
         (origen `model`), pero solo si el modelo mejoró y generaliza.
         """
-        if len(set(measurement_ids)) != len(measurement_ids):
-            raise Validation("model_repeated_ids", "Measurement ids must not repeat")
-        samples = []
-        for mid in measurement_ids:
-            m = self.repository.get_measurement(mid)
-            if m is None:
-                raise NotFound("measurement_not_found", f"Measurement {mid} does not exist")
-            samples.append((m, self.repository.get_readings(mid)))
-        devices = {m.device_id for m, _ in samples}
-        if len(devices) != 1:
-            raise Validation("model_mixed_devices", "All measurements must come from one phone")
+        samples = self._samples(measurement_ids)
         result = tune(samples, max_attempts=max_attempts)
-        device_id = devices.pop()
+        device_id = samples[0][0].device_id
         applied = bool(apply and result["improved"] and result["generalizes"] is not False)
         if applied:
             params = result["final_params"]
@@ -307,5 +298,25 @@ class PrecisionModelService:
             ModelRun(device_id, tuple(measurement_ids), result, applied=applied)
         )
 
+    def evaluate(
+        self, measurement_ids: Sequence[int], max_attempts: int = DEFAULT_ATTEMPTS
+    ) -> dict:
+        """Línea base (algoritmo solo) frente al modelo en las mismas mediciones. No guarda nada."""
+        return evaluate(self._samples(measurement_ids), max_attempts=max_attempts)
+
     def list(self, device_id: str | None = None) -> list[ModelRun]:
         return self.repository.list_model_runs(device_id)
+
+    def _samples(self, measurement_ids: Sequence[int]) -> list[tuple[Measurement, list]]:
+        """Mediciones repetidas de un mismo celular con sus lecturas, en el orden pedido."""
+        if len(set(measurement_ids)) != len(measurement_ids):
+            raise Validation("model_repeated_ids", "Measurement ids must not repeat")
+        samples = []
+        for mid in measurement_ids:
+            m = self.repository.get_measurement(mid)
+            if m is None:
+                raise NotFound("measurement_not_found", f"Measurement {mid} does not exist")
+            samples.append((m, self.repository.get_readings(mid)))
+        if len({m.device_id for m, _ in samples}) != 1:
+            raise Validation("model_mixed_devices", "All measurements must come from one phone")
+        return samples
