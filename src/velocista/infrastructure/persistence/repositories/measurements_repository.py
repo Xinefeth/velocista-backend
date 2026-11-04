@@ -251,6 +251,15 @@ class SqlAlchemyMeasurementsRepository:
         self.session.commit()
         return _measurement(row)
 
+    def delete_measurement(self, measurement_id):
+        # Las lecturas se borran con ella (ON DELETE CASCADE en measurement_reading).
+        row = self.session.get(MeasurementModel, measurement_id)
+        if row is None:
+            return False
+        self.session.delete(row)
+        self.session.commit()
+        return True
+
     # --- calibraciones
     def add_calibration(self, record):
         row = SensorCalibrationModel(
@@ -305,6 +314,22 @@ class SqlAlchemyMeasurementsRepository:
             query.order_by(GpsTrialModel.created_at.desc(), GpsTrialModel.id.desc())
         )
         return [_gps_trial(row) for row in rows]
+
+    def rename_gps_trial(self, trial_id, place_name):
+        row = self.session.get(GpsTrialModel, trial_id)
+        if row is None:
+            return None
+        row.place_name = place_name
+        self.session.commit()
+        return _gps_trial(row)
+
+    def delete_gps_trial(self, trial_id):
+        row = self.session.get(GpsTrialModel, trial_id)
+        if row is None:
+            return False
+        self.session.delete(row)
+        self.session.commit()
+        return True
 
     # --- modelo de precisión
     def add_model_run(self, run):

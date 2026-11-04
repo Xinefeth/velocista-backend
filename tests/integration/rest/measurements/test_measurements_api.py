@@ -217,6 +217,59 @@ class TestGpsError:
         assert summary["min_side_m"] > 0
         assert set(summary["by_environment"]) == {"open", "buildings"}
 
+    def test_mistaken_trial_can_be_deleted(self, client):
+        body = {
+            "device_id": PHONE,
+            "place_name": "Equivocada",
+            "environment": "open",
+            "real_distance_m": 30,
+            "start_fixes": self.fixes(0, 1),
+            "end_fixes": self.fixes(30, 2),
+        }
+        trial = client.post("/api/gps-trials", json=body).json()
+        assert client.delete(f"/api/gps-trials/{trial['id']}").status_code == 204
+        assert client.get("/api/gps-trials", params={"device_id": PHONE}).json() == []
+        summary = client.get("/api/gps-trials/summary", params={"device_id": PHONE}).json()
+        assert summary["trials"] == 0
+        missing = client.delete(f"/api/gps-trials/{trial['id']}")
+        assert missing.status_code == 404
+        assert missing.json()["detail"]["reason"] == "gps_trial_not_found"
+
+    def test_trial_can_be_renamed_without_changing_its_result(self, client):
+        body = {
+            "device_id": PHONE,
+            "place_name": "Casa",
+            "environment": "open",
+            "real_distance_m": 30,
+            "start_fixes": self.fixes(0, 5),
+            "end_fixes": self.fixes(30, 6),
+        }
+        trial = client.post("/api/gps-trials", json=body).json()
+        url = f"/api/gps-trials/{trial['id']}"
+        renamed = client.patch(url, json={"place_name": "  Calle Bolívar "})
+        assert renamed.status_code == 200, renamed.text
+        assert renamed.json()["place_name"] == "Calle Bolívar"
+        assert renamed.json()["result"] == trial["result"]
+        assert client.patch(url, json={"place_name": "   "}).status_code == 422
+        assert client.patch("/api/gps-trials/999999", json={"place_name": "x"}).status_code == 404
+
+    def test_round_trip_trial_uses_meters_only(self, client):
+        response = client.post(
+            "/api/gps-trials",
+            json={
+                "device_id": PHONE,
+                "place_name": "Ida y vuelta en carro",
+                "environment": "open",
+                "real_distance_m": 0,
+                "start_fixes": self.fixes(0, 3),
+                "end_fixes": self.fixes(0, 4),
+            },
+        )
+        assert response.status_code == 201, response.text
+        single = response.json()["result"]["methods"]["single"]
+        assert single["error_pct"] is None
+        assert single["error_m"] == pytest.approx(single["gps_distance_m"])
+
     def test_trial_needs_three_fixes(self, client):
         response = client.post(
             "/api/gps-trials",
@@ -279,3 +332,32 @@ class TestAdaptiveStepThreshold:
         send(client, m["id"], walk_readings(step_accel=1.0, gyro_noise_dps=0.3, seed=9))
         result = client.post(f"{MEASUREMENTS}/{m['id']}/finish").json()["result"]
         assert abs(result["perimeter_error_pct"]) < 3
+
+
+class TestDeleteMeasurement:
+    def test_deleted_measurement_and_its_readings_are_gone(self, client):
+        calibrate(client)
+        wrong = measure(client)
+        kept = measure(client, seed=2)
+        response = client.delete(f"{MEASUREMENTS}/{wrong['id']}")
+        assert response.status_code == 204
+        assert client.get(f"{MEASUREMENTS}/{wrong['id']}").status_code == 404
+        assert client.get(f"{MEASUREMENTS}/{wrong['id']}/readings").status_code == 404
+        page = client.get(MEASUREMENTS, params={"device_id": PHONE}).json()
+        assert [m["id"] for m in page["items"]] == [kept["id"]]
+        assert (
+            len(client.get(f"{MEASUREMENTS}/{kept['id']}/readings").json())
+            == (kept["reading_count"])
+        )
+
+    def test_cancelled_recording_can_be_deleted_and_keeps_calibration(self, client):
+        calibrate(client)
+        m = start(client)
+        send(client, m["id"], walk_readings()[:100])
+        assert client.delete(f"{MEASUREMENTS}/{m['id']}").status_code == 204
+        assert client.get(f"{CALIBRATIONS}/{PHONE}").json()["ready"]["steps"] is True
+
+    def test_unknown_measurement_cannot_be_deleted(self, client):
+        response = client.delete(f"{MEASUREMENTS}/999999")
+        assert response.status_code == 404
+        assert response.json()["detail"]["reason"] == "measurement_not_found"

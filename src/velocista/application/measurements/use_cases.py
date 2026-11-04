@@ -131,6 +131,11 @@ class MeasurementsService:
         result = compute_result(m, self.repository.get_readings(measurement_id))
         return self.repository.save_result(measurement_id, result, datetime.now(UTC))
 
+    def delete(self, measurement_id: int) -> None:
+        """Borra una medición equivocada o cancelada, con todas sus lecturas."""
+        if not self.repository.delete_measurement(measurement_id):
+            raise NotFound("measurement_not_found", "Measurement does not exist")
+
 
 class CalibrationService:
     def __init__(self, repository: MeasurementsRepository):
@@ -208,6 +213,21 @@ class GpsErrorService:
 
     def list(self, device_id: str | None = None) -> list[GpsTrial]:
         return self.repository.list_gps_trials(device_id)
+
+    def rename(self, trial_id: int, place_name: str) -> GpsTrial:
+        """Corrige el nombre del lugar; las lecturas y el resultado no cambian."""
+        place_name = place_name.strip()
+        if not 1 <= len(place_name) <= PLACE_MAX:
+            raise Validation("gps_trial_place", f"place_name needs 1 to {PLACE_MAX} characters")
+        trial = self.repository.rename_gps_trial(trial_id, place_name)
+        if trial is None:
+            raise NotFound("gps_trial_not_found", "GPS trial does not exist")
+        return trial
+
+    def delete(self, trial_id: int) -> None:
+        """Borra una prueba equivocada; el resumen deja de contarla."""
+        if not self.repository.delete_gps_trial(trial_id):
+            raise NotFound("gps_trial_not_found", "GPS trial does not exist")
 
     def summary(self, device_id: str | None = None, target_pct: float = 10.0) -> dict:
         trials = self.repository.list_gps_trials(device_id)

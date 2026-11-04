@@ -7,13 +7,14 @@ Flujo del celular (EN-32 a EN-35):
 3. POST /api/measurements                      empezar (copia la calibración vigente)
 4. POST /api/measurements/{id}/readings        cada ~0,5 s un lote de lecturas
 5. POST /api/measurements/{id}/finish          calcular perímetro, área y error de cierre
+6. DELETE /api/measurements/{id}               borrar una equivocada o cancelada
 """
 
 from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Path, Query
+from fastapi import APIRouter, Depends, Path, Query, Response
 
 from velocista.application.measurements.use_cases import (
     CalibrationService,
@@ -36,6 +37,7 @@ from velocista.interface.rest.measurements.schemas import (
     CarCalibrationIn,
     GpsTrialIn,
     GpsTrialOut,
+    GpsTrialRenameIn,
     GyroCalibrationIn,
     IngestReportOut,
     MeasurementIn,
@@ -180,6 +182,22 @@ def finish_measurement(measurement_id: MeasurementId, service: Measurements):
     return MeasurementOut.from_entity(service.finish(measurement_id))
 
 
+@measurements.delete(
+    "/{measurement_id}",
+    status_code=204,
+    operation_id="deleteMeasurement",
+    summary="Delete a measurement",
+    description=(
+        "Deletes the measurement and all its readings permanently (a mistaken or cancelled "
+        "walk) and answers 204 with no body. Calibrations and GPS trials are kept."
+    ),
+    responses=error_responses({401: UNAUTHORIZED, 404: NOT_FOUND}),
+)
+def delete_measurement(measurement_id: MeasurementId, service: Measurements):
+    service.delete(measurement_id)
+    return Response(status_code=204)
+
+
 # ------------------------------------------------------------------ calibración (EN-35)
 
 
@@ -311,6 +329,38 @@ def create_gps_trial(data: GpsTrialIn, service: GpsErrors):
 )
 def list_gps_trials(service: GpsErrors, device_id: DeviceQuery = None):
     return [GpsTrialOut.from_entity(t) for t in service.list(device_id)]
+
+
+@gps_trials.patch(
+    "/{trial_id}",
+    response_model=GpsTrialOut,
+    operation_id="renameGpsTrial",
+    summary="Rename a GPS error trial",
+    description="Fixes the place name only; readings and errors stay the same.",
+    responses=error_responses(
+        {401: UNAUTHORIZED, 404: "GPS trial does not exist (`gps_trial_not_found`)", 422: INVALID}
+    ),
+)
+def rename_gps_trial(trial_id: MeasurementId, data: GpsTrialRenameIn, service: GpsErrors):
+    return GpsTrialOut.from_entity(service.rename(trial_id, data.place_name))
+
+
+@gps_trials.delete(
+    "/{trial_id}",
+    status_code=204,
+    operation_id="deleteGpsTrial",
+    summary="Delete a GPS error trial",
+    description=(
+        "Deletes a mistaken trial permanently and answers 204 with no body; the summary stops "
+        "counting it."
+    ),
+    responses=error_responses(
+        {401: UNAUTHORIZED, 404: "GPS trial does not exist (`gps_trial_not_found`)"}
+    ),
+)
+def delete_gps_trial(trial_id: MeasurementId, service: GpsErrors):
+    service.delete(trial_id)
+    return Response(status_code=204)
 
 
 @gps_trials.get(
