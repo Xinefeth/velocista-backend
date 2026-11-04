@@ -94,6 +94,9 @@ class Result:
     perimeter_error_pct: float | None = None
     area_error_pct: float | None = None
     min_gps_size_m: float | None = None
+    # Giro acumulado de toda la caminata (°, positivo a la izquierda). None por GPS y en filas
+    # guardadas antes de HU-30 (el resultado es JSON: no hay migración).
+    turn_total_deg: float | None = None
     warnings: tuple[str, ...] = ()
     raw_path: tuple[XY, ...] = ()
     corrected_path: tuple[XY, ...] = ()

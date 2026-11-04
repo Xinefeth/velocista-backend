@@ -222,6 +222,16 @@ class ResultOut(BaseModel):
     perimeter_error_pct: float | None
     area_error_pct: float | None
     min_gps_size_m: float | None
+    turn_total_deg: float | None = Field(
+        default=None,
+        description=(
+            "Accumulated turn of the whole walk, in degrees, positive to the left "
+            "(counterclockwise): about -360 for a closed lap walked clockwise and +360 "
+            "counterclockwise. `null` for GPS measurements and for results saved before this "
+            "field existed. `heading_drift_deg` is what is left over from a multiple of 360"
+        ),
+        examples=[-358.4],
+    )
     warnings: list[str]
     raw_path: list[MetrePointIO]
     corrected_path: list[MetrePointIO]

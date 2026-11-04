@@ -204,6 +204,42 @@ celular, ángulos en **grados**, giro en **°/s**, aceleración en **m/s²**.
 Los campos no listados se rechazan con 422. `MeasurementOut` devuelve además `id`, `calibration`, `status`
 (`recording` / `finished`), `reading_count`, `started_at`, `finished_at` y `result`.
 
+### Resultado de la medición — `ResultOut`
+
+`result` es `null` hasta que se llama a `POST /api/measurements/{id}/finish`; después aparece en `GET
+/api/measurements/{id}` y en la lista (la lista no incluye las trayectorias). Distancias en **metros**, áreas
+en m², giros en **grados**.
+
+| Campo | Unidad | Descripción |
+|---|---|---|
+| `method`, `reading_count`, `step_count` | — | Método, lecturas usadas y pasos contados (0 por GPS y en `car`) |
+| `distance_m` | m | Largo del recorrido caminado |
+| `closure_error_m`, `closure_error_pct` | m, % | Distancia entre el punto final y el inicial, sin corregir, y ese valor sobre `distance_m` |
+| `quality` | `green` · `yellow` · `red` | Según `closure_error_pct`: verde < 3 %, amarillo hasta 6 %, rojo más |
+| `raw_perimeter_m`, `raw_area_m2` | m, m² | Antes de corregir giro y cierre |
+| `perimeter_m`, `area_m2` | m, m² | Tras corregir giro y cierre (y la escala, si hay lado con cinta) |
+| `scale_factor` | — o `null` | Escala aplicada con `tape_side_m` y una esquina marcada |
+| `corners`, `concave`, `self_crossing` | —, bool, bool | Esquinas marcadas, figura cóncava y lados que se cruzan |
+| `reference_perimeter_m`, `reference_area_m2`, `perimeter_error_pct`, `area_error_pct` | m, m², % | Plano de referencia y error frente a él; `null` si no hay plano |
+| **`turn_total_deg`** | ° | **Giro acumulado de toda la caminata** (HU-30). Positivo a la izquierda (antihorario): ≈ **−360** en una vuelta cerrada en sentido horario y ≈ **+360** en sentido antihorario. Incluye la deriva del giroscopio. `null` en mediciones por GPS y en resultados guardados antes de este campo (el resultado se guarda como JSON: no hay migración). Campo opcional: los clientes que no lo conocen siguen funcionando |
+| `heading_drift_deg` | ° o `null` | Giro **sobrante** frente al múltiplo de 360° más cercano (la deriva): `turn_total_deg` − (n · 360°). Solo por pasos o `car` en recorrido cerrado; `null` por GPS, en recorrido abierto o si no se pudo estimar (`end_heading_unknown`) |
+| `min_gps_size_m` | m o `null` | Solo GPS: lado mínimo del lugar para que el error del GPS sea menor que el 10 % de lo medido (error típico ÷ 0,10). `null` en pasos y `car` |
+| `warnings` | lista de texto | Avisos del cálculo (abajo) |
+| `raw_path`, `corrected_path`, `polygon` | m | Puntos `{x, y}` de la trayectoria sin corregir, la corregida y el polígono usado para perímetro y área |
+
+`turn_total_deg` y `heading_drift_deg` se leen juntos: en una vuelta cerrada bien hecha el giro total es
+±360° y el sobrante, cercano a 0; un sobrante grande indica deriva del giroscopio (conviene calibrarlo).
+
+**Avisos (`warnings`)**
+
+| Aviso | Cuándo |
+|---|---|
+| `step_not_calibrated` | Método `steps` sin calibración del paso: se usó un paso promedio |
+| `end_heading_unknown` | Recorrido cerrado cuyo giro total no está a ±45° de un múltiplo de 360° (no se volvió a orientar al final): no se corrigió el giro y `heading_drift_deg` es `null` |
+| `scale_needs_corner` | Se dio `tape_side_m` pero no hay ninguna esquina marcada: no se pudo aplicar la escala |
+| `gps_low_accuracy_dropped` | Solo GPS: se descartaron lecturas con precisión mala |
+| `gps_space_too_small` | Solo GPS, recorrido cerrado: el lado típico (perímetro ÷ 4) es menor que `min_gps_size_m`; el lugar es demasiado pequeño para el GPS |
+
 ### Enviar lecturas — `POST /api/measurements/{id}/readings`
 
 Cuerpo: `{"readings": [ReadingIn, …]}` con **1 a 1000 lecturas por lote**. Lo recomendado es un lote cada

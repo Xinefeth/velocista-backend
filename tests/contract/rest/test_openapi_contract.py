@@ -172,3 +172,17 @@ def test_track_operations_use_the_agreed_ids(operations):
         "deleteTrack",
         "exportTrack",
     }
+
+
+def test_result_exposes_the_total_turn_as_an_optional_documented_field(spec):
+    """HU-30 B1: `turn_total_deg` is additive, nullable, optional and documented."""
+    result = spec["components"]["schemas"]["ResultOut"]
+    field = result["properties"]["turn_total_deg"]
+    assert "turn_total_deg" not in result["required"]  # optional: old rows and old clients
+    assert {"type": "number"} in field["anyOf"] and {"type": "null"} in field["anyOf"]
+    assert "degrees" in field["description"] and "left" in field["description"]
+    assert "360" in field["description"]
+    assert field["examples"] == [-358.4]
+    # nothing that existed changed: the other fields are still required
+    for name in ("heading_drift_deg", "min_gps_size_m", "warnings", "perimeter_m", "quality"):
+        assert name in result["required"]
