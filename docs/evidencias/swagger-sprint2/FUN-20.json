@@ -1,0 +1,52 @@
+{
+  "id": "FUN-20",
+  "title": "Calibrar el largo del paso caminando 20 m tres veces",
+  "request": {
+    "method": "POST",
+    "url": "/api/calibrations/phone-fun/step",
+    "body": {
+      "trials": [
+        {
+          "distance_m": 20,
+          "step_count": 29
+        },
+        {
+          "distance_m": 20,
+          "step_count": 28
+        },
+        {
+          "distance_m": 20,
+          "step_count": 29
+        }
+      ]
+    }
+  },
+  "expected_status": 201,
+  "response": {
+    "status": 201,
+    "body": {
+      "id": 1,
+      "device_id": "phone-fun",
+      "kind": "step_length",
+      "origin": "manual",
+      "params": {
+        "step_length_m": 0.6978653530377669,
+        "lengths_m": [
+          0.6896551724137931,
+          0.7142857142857143,
+          0.6896551724137931
+        ],
+        "steps": [
+          29,
+          28,
+          29
+        ],
+        "spread_m": 0.024630541871921152,
+        "warnings": [
+          "uneven_pace"
+        ]
+      },
+      "created_at": "2026-11-04T09:04:29.369538Z"
+    }
+  }
+}

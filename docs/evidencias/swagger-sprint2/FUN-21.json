@@ -1,0 +1,38 @@
+{
+  "id": "FUN-21",
+  "title": "Calibrar el paso con una distancia negativa (inválido)",
+  "request": {
+    "method": "POST",
+    "url": "/api/calibrations/phone-fun/step",
+    "body": {
+      "trials": [
+        {
+          "distance_m": -5,
+          "step_count": 8
+        }
+      ]
+    }
+  },
+  "expected_status": 422,
+  "response": {
+    "status": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "greater_than",
+          "loc": [
+            "body",
+            "trials",
+            0,
+            "distance_m"
+          ],
+          "msg": "Input should be greater than 0",
+          "input": -5,
+          "ctx": {
+            "gt": 0.0
+          }
+        }
+      ]
+    }
+  }
+}

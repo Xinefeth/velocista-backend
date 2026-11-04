@@ -1,0 +1,27 @@
+{
+  "id": "FUN-31",
+  "title": "Enviar lecturas a una medición ya terminada",
+  "request": {
+    "method": "POST",
+    "url": "/api/measurements/1/readings",
+    "body": {
+      "readings": [
+        {
+          "seq": 99999,
+          "t_ms": 1,
+          "kind": "corner"
+        }
+      ]
+    }
+  },
+  "expected_status": 409,
+  "response": {
+    "status": 409,
+    "body": {
+      "detail": {
+        "reason": "measurement_finished",
+        "detail": "The measurement is finished; start a new one"
+      }
+    }
+  }
+}

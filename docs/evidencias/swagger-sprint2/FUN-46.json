@@ -1,0 +1,119 @@
+{
+  "id": "FUN-46",
+  "title": "Listar las corridas del modelo",
+  "request": {
+    "method": "GET",
+    "url": "/api/precision-model/runs",
+    "body": null
+  },
+  "expected_status": 200,
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "id": 1,
+        "device_id": "phone-fun",
+        "measurement_ids": [
+          1,
+          2
+        ],
+        "applied": false,
+        "result": {
+          "method": "steps",
+          "holdout": null,
+          "attempts": [
+            {
+              "cost": 12.418647716387923,
+              "params": {
+                "gyro_bias_dps": 0.20469780697104956,
+                "step_length_m": 0.7692307692307693
+              },
+              "attempt": 1,
+              "accepted": true,
+              "best_cost": 12.418647716387923
+            },
+            {
+              "cost": 15.293647716387927,
+              "params": {
+                "gyro_bias_dps": 0.20469780697104956,
+                "step_length_m": 0.7892307692307693
+              },
+              "attempt": 2,
+              "accepted": false,
+              "best_cost": 12.418647716387923
+            },
+            {
+              "cost": 9.543647716387891,
+              "params": {
+                "gyro_bias_dps": 0.20469780697104956,
+                "step_length_m": 0.7492307692307693
+              },
+              "attempt": 3,
+              "accepted": true,
+              "best_cost": 9.543647716387891
+            },
+            {
+              "cost": 7.93764322883851,
+              "params": {
+                "gyro_bias_dps": 0.4246978069710496,
+                "step_length_m": 0.7492307692307693
+              },
+              "attempt": 4,
+              "accepted": true,
+              "best_cost": 7.93764322883851
+            },
+            {
+              "cost": 11.100143228838494,
+              "params": {
+                "gyro_bias_dps": 0.4246978069710496,
+                "step_length_m": 0.7712307692307693
+              },
+              "attempt": 5,
+              "accepted": false,
+              "best_cost": 7.93764322883851
+            },
+            "... 5 more (10 in total)"
+          ],
+          "improved": true,
+          "final_cost": 1.2963932288385127,
+          "generalizes": null,
+          "meets_green": true,
+          "final_params": {
+            "gyro_bias_dps": 0.4246978069710496,
+            "step_length_m": 0.7030307692307692
+          },
+          "measurements": [
+            {
+              "after": {
+                "closure_error_pct": 0.23572014247394668,
+                "perimeter_error_pct": 1.0606730769230799
+              },
+              "before": {
+                "closure_error_pct": 3.685248283829818,
+                "perimeter_error_pct": 10.576923076923105
+              },
+              "measurement_id": 1
+            },
+            {
+              "after": {
+                "closure_error_pct": 0.23572016135691903,
+                "perimeter_error_pct": 1.0606730769230799
+              },
+              "before": {
+                "closure_error_pct": 3.6852429088376546,
+                "perimeter_error_pct": 10.576923076923105
+              },
+              "measurement_id": 2
+            }
+          ],
+          "baseline_cost": 14.262168673256841,
+          "initial_params": {
+            "gyro_bias_dps": 0.004697806971049532,
+            "step_length_m": 0.7692307692307693
+          }
+        },
+        "created_at": "2026-11-04T09:04:54.464198Z"
+      }
+    ]
+  }
+}

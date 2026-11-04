@@ -1,0 +1,39 @@
+{
+  "id": "FUN-22",
+  "title": "Calibrar la velocidad del carro (v = k·PWM + c)",
+  "request": {
+    "method": "POST",
+    "url": "/api/calibrations/phone-fun/car",
+    "body": {
+      "trials": [
+        {
+          "pwm": 30,
+          "distance_m": 1.4,
+          "seconds": 4
+        },
+        {
+          "pwm": 60,
+          "distance_m": 2.6,
+          "seconds": 4
+        }
+      ]
+    }
+  },
+  "expected_status": 201,
+  "response": {
+    "status": 201,
+    "body": {
+      "id": 1,
+      "device_id": "phone-fun",
+      "kind": "car_speed",
+      "origin": "manual",
+      "params": {
+        "k": 0.010000000000000002,
+        "c": 0.04999999999999993,
+        "r2": 1.0,
+        "trials": 2
+      },
+      "created_at": "2026-11-04T09:04:30.564423Z"
+    }
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "id": "FUN-51",
+  "title": "Área y ángulos de una figura en L marcada por puntos",
+  "request": {
+    "method": "POST",
+    "url": "/api/polygons/from-points",
+    "body": {
+      "points": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 6,
+          "y": 0
+        },
+        {
+          "x": 6,
+          "y": 2
+        },
+        {
+          "x": 2,
+          "y": 2
+        },
+        {
+          "x": 2,
+          "y": 8
+        },
+        "... 1 more (6 in total)"
+      ]
+    }
+  },
+  "expected_status": 200,
+  "response": {
+    "status": 200,
+    "body": {
+      "points": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 6.0,
+          "y": 0.0
+        },
+        {
+          "x": 6.0,
+          "y": 2.0
+        },
+        {
+          "x": 2.0,
+          "y": 2.0
+        },
+        {
+          "x": 2.0,
+          "y": 8.0
+        },
+        "... 1 more (6 in total)"
+      ],
+      "sides_m": [
+        6.0,
+        2.0,
+        4.0,
+        6.0,
+        2.0,
+        "... 1 more (6 in total)"
+      ],
+      "angles_deg": [
+        90.0,
+        90.0,
+        90.0,
+        270.0,
+        90.0,
+        "... 1 more (6 in total)"
+      ],
+      "perimeter_m": 28.0,
+      "area_m2": 24.0,
+      "concave": true,
+      "self_crossing": false,
+      "closure_error_m": 0.0,
+      "angle_sum_error_deg": 0.0,
+      "closes": true,
+      "computed_sides": [],
+      "computed_angles": [],
+      "warnings": []
+    }
+  }
+}

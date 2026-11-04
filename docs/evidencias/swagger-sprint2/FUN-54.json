@@ -1,0 +1,19 @@
+{
+  "id": "FUN-54",
+  "title": "Consultar un perfil de reglamento que no existe",
+  "request": {
+    "method": "GET",
+    "url": "/api/profiles/no-such-profile",
+    "body": null
+  },
+  "expected_status": 404,
+  "response": {
+    "status": 404,
+    "body": {
+      "detail": {
+        "reason": "profile_not_found",
+        "detail": "Profile does not exist"
+      }
+    }
+  }
+}

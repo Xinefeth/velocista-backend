@@ -1,0 +1,14 @@
+{
+  "id": "FUN-42",
+  "title": "Borrar una prueba del GPS equivocada",
+  "request": {
+    "method": "DELETE",
+    "url": "/api/gps-trials/1",
+    "body": null
+  },
+  "expected_status": 204,
+  "response": {
+    "status": 204,
+    "body": null
+  }
+}

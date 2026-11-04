@@ -1,0 +1,19 @@
+{
+  "id": "FUN-43",
+  "title": "Borrar una prueba del GPS que no existe",
+  "request": {
+    "method": "DELETE",
+    "url": "/api/gps-trials/999999",
+    "body": null
+  },
+  "expected_status": 404,
+  "response": {
+    "status": 404,
+    "body": {
+      "detail": {
+        "reason": "gps_trial_not_found",
+        "detail": "GPS trial does not exist"
+      }
+    }
+  }
+}

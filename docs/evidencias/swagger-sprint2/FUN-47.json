@@ -1,0 +1,125 @@
+{
+  "id": "FUN-47",
+  "title": "Evaluar el modelo frente al algoritmo solo (línea base)",
+  "request": {
+    "method": "POST",
+    "url": "/api/precision-model/evaluations",
+    "body": {
+      "measurement_ids": [
+        1,
+        2,
+        3
+      ],
+      "max_attempts": 30
+    }
+  },
+  "expected_status": 200,
+  "response": {
+    "status": 200,
+    "body": {
+      "method": "steps",
+      "measurement_count": 3,
+      "train_count": 2,
+      "holdout_measurement_id": 3,
+      "green_limit_pct": 3.0,
+      "initial_params": {
+        "gyro_bias_dps": 0.004697806971049532,
+        "step_length_m": 0.7692307692307693
+      },
+      "final_params": {
+        "gyro_bias_dps": 0.42469780697104953,
+        "step_length_m": 0.7030307692307695
+      },
+      "baseline": {
+        "mean_closure_error_m": 1.3040099802411684,
+        "mean_closure_error_pct": 3.6852455963337363,
+        "mean_abs_perimeter_error_pct": 10.576923076923105,
+        "quality": "yellow"
+      },
+      "model": {
+        "mean_closure_error_m": 0.07623051907317722,
+        "mean_closure_error_pct": 0.23572015191542964,
+        "mean_abs_perimeter_error_pct": 1.0606730769231465,
+        "quality": "green"
+      },
+      "improvement_pct_points": 3.4495254444183066,
+      "improved": true,
+      "cost_improved": true,
+      "meets_green": true,
+      "generalizes": true,
+      "verdict": "improves_green",
+      "curve": [
+        {
+          "attempt": 0,
+          "without_model_pct": 3.6852455963337363,
+          "with_model_pct": 3.6852455963337363
+        },
+        {
+          "attempt": 1,
+          "without_model_pct": 3.6852455963337363,
+          "with_model_pct": 1.841724639464818
+        },
+        {
+          "attempt": 2,
+          "without_model_pct": 3.6852455963337363,
+          "with_model_pct": 1.841724639464818
+        },
+        {
+          "attempt": 3,
+          "without_model_pct": 3.6852455963337363,
+          "with_model_pct": 1.841724639464813
+        },
+        {
+          "attempt": 4,
+          "without_model_pct": 3.6852455963337363,
+          "with_model_pct": 0.23572015191543216
+        },
+        "... 26 more (31 in total)"
+      ],
+      "measurements": [
+        {
+          "measurement_id": 1,
+          "role": "train",
+          "before": {
+            "closure_error_m": 1.3040109312013204,
+            "closure_error_pct": 3.685248283829818,
+            "perimeter_error_pct": 10.576923076923105
+          },
+          "after": {
+            "closure_error_m": 0.0762305160198558,
+            "closure_error_pct": 0.2357201424739435,
+            "perimeter_error_pct": 1.0606730769231465
+          }
+        },
+        {
+          "measurement_id": 2,
+          "role": "train",
+          "before": {
+            "closure_error_m": 1.3040090292810165,
+            "closure_error_pct": 3.6852429088376546,
+            "perimeter_error_pct": 10.576923076923105
+          },
+          "after": {
+            "closure_error_m": 0.07623052212649865,
+            "closure_error_pct": 0.23572016135691579,
+            "perimeter_error_pct": 1.0606730769231465
+          }
+        },
+        {
+          "measurement_id": 3,
+          "role": "holdout",
+          "before": {
+            "closure_error_m": 1.3041467082501634,
+            "closure_error_pct": 3.6856320015765482,
+            "perimeter_error_pct": 10.576923076923105
+          },
+          "after": {
+            "closure_error_m": 0.07623836494950939,
+            "closure_error_pct": 0.23574441294871937,
+            "perimeter_error_pct": 1.0606730769231465
+          }
+        }
+      ]
+    }
+  }
+}

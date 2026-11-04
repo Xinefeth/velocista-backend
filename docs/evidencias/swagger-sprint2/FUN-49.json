@@ -1,0 +1,86 @@
+{
+  "id": "FUN-49",
+  "title": "Cerrar una figura en L con un ángulo y dos lados que faltan",
+  "request": {
+    "method": "POST",
+    "url": "/api/polygons/solve",
+    "body": {
+      "sides_m": [
+        6,
+        2,
+        4,
+        null,
+        null,
+        "... 1 more (6 in total)"
+      ],
+      "angles_deg": [
+        90,
+        90,
+        90,
+        null,
+        90,
+        "... 1 more (6 in total)"
+      ]
+    }
+  },
+  "expected_status": 200,
+  "response": {
+    "status": 200,
+    "body": {
+      "points": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 6.0,
+          "y": 0.0
+        },
+        {
+          "x": 6.0,
+          "y": 2.0
+        },
+        {
+          "x": 2.0,
+          "y": 2.0000000000000004
+        },
+        {
+          "x": 2.0000000000000004,
+          "y": 8.0
+        },
+        "... 1 more (6 in total)"
+      ],
+      "sides_m": [
+        6.0,
+        2.0,
+        4.0,
+        5.999999999999999,
+        1.9999999999999991,
+        "... 1 more (6 in total)"
+      ],
+      "angles_deg": [
+        90.0,
+        90.0,
+        90.0,
+        270.0,
+        90.0,
+        "... 1 more (6 in total)"
+      ],
+      "perimeter_m": 28.0,
+      "area_m2": 23.999999999999996,
+      "concave": true,
+      "self_crossing": false,
+      "closure_error_m": 1.373085294266359e-16,
+      "angle_sum_error_deg": 0.0,
+      "closes": true,
+      "computed_sides": [
+        3,
+        4
+      ],
+      "computed_angles": [
+        3
+      ],
+      "warnings": []
+    }
+  }
+}

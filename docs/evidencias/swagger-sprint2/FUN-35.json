@@ -1,0 +1,96 @@
+{
+  "id": "FUN-35",
+  "title": "Ver las lecturas guardadas de una medición",
+  "request": {
+    "method": "GET",
+    "url": "/api/measurements/1/readings",
+    "body": null
+  },
+  "expected_status": 200,
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "seq": 0,
+        "t_ms": 1000000,
+        "kind": "motion",
+        "gyro_z_dps": 0.4,
+        "accel": [
+          0.0,
+          0.0,
+          9.871059237657773
+        ],
+        "step": false,
+        "pwm": null,
+        "lat": null,
+        "lon": null,
+        "accuracy_m": null
+      },
+      {
+        "seq": 1,
+        "t_ms": 1000020,
+        "kind": "motion",
+        "gyro_z_dps": 0.4,
+        "accel": [
+          0.0,
+          0.0,
+          9.879122280434988
+        ],
+        "step": false,
+        "pwm": null,
+        "lat": null,
+        "lon": null,
+        "accuracy_m": null
+      },
+      {
+        "seq": 2,
+        "t_ms": 1000040,
+        "kind": "motion",
+        "gyro_z_dps": 0.4,
+        "accel": [
+          0.0,
+          0.0,
+          9.809966790446913
+        ],
+        "step": false,
+        "pwm": null,
+        "lat": null,
+        "lon": null,
+        "accuracy_m": null
+      },
+      {
+        "seq": 3,
+        "t_ms": 1000060,
+        "kind": "motion",
+        "gyro_z_dps": 0.4,
+        "accel": [
+          0.0,
+          0.0,
+          9.768422817451418
+        ],
+        "step": false,
+        "pwm": null,
+        "lat": null,
+        "lon": null,
+        "accuracy_m": null
+      },
+      {
+        "seq": 4,
+        "t_ms": 1000080,
+        "kind": "motion",
+        "gyro_z_dps": 0.4,
+        "accel": [
+          0.0,
+          0.0,
+          9.752041339244792
+        ],
+        "step": false,
+        "pwm": null,
+        "lat": null,
+        "lon": null,
+        "accuracy_m": null
+      },
+      "... 1568 more (1573 in total)"
+    ]
+  }
+}

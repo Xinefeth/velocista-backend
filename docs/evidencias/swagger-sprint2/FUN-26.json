@@ -1,0 +1,24 @@
+{
+  "id": "FUN-26",
+  "title": "Empezar una medición con el carro sin calibrarlo",
+  "request": {
+    "method": "POST",
+    "url": "/api/measurements",
+    "body": {
+      "method": "car",
+      "mount": "robot",
+      "place_name": "Pista",
+      "device_id": "car-phone"
+    }
+  },
+  "expected_status": 422,
+  "response": {
+    "status": 422,
+    "body": {
+      "detail": {
+        "reason": "measurement_not_calibrated",
+        "detail": "Calibrate the car speed first"
+      }
+    }
+  }
+}

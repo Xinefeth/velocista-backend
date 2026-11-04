@@ -1,0 +1,43 @@
+{
+  "id": "FUN-19",
+  "title": "Calibrar el giroscopio con el celular en movimiento (inválido)",
+  "request": {
+    "method": "POST",
+    "url": "/api/calibrations/phone-fun/gyro",
+    "body": {
+      "samples": [
+        {
+          "t_ms": 0,
+          "gyro_z_dps": 30.0
+        },
+        {
+          "t_ms": 20,
+          "gyro_z_dps": -30.0
+        },
+        {
+          "t_ms": 40,
+          "gyro_z_dps": 30.0
+        },
+        {
+          "t_ms": 60,
+          "gyro_z_dps": -30.0
+        },
+        {
+          "t_ms": 80,
+          "gyro_z_dps": 30.0
+        },
+        "... 245 more (250 in total)"
+      ]
+    }
+  },
+  "expected_status": 422,
+  "response": {
+    "status": 422,
+    "body": {
+      "detail": {
+        "reason": "calibration_phone_moved",
+        "detail": "The phone moved during calibration; keep it still"
+      }
+    }
+  }
+}

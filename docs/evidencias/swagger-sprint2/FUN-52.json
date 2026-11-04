@@ -1,0 +1,76 @@
+{
+  "id": "FUN-52",
+  "title": "Puntos cuyos lados se cruzan: avisa",
+  "request": {
+    "method": "POST",
+    "url": "/api/polygons/from-points",
+    "body": {
+      "points": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 4,
+          "y": 4
+        },
+        {
+          "x": 4,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 4
+        }
+      ]
+    }
+  },
+  "expected_status": 200,
+  "response": {
+    "status": 200,
+    "body": {
+      "points": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 4.0,
+          "y": 4.0
+        },
+        {
+          "x": 4.0,
+          "y": 0.0
+        },
+        {
+          "x": 0.0,
+          "y": 4.0
+        }
+      ],
+      "sides_m": [
+        5.656854249492381,
+        4.0,
+        5.656854249492381,
+        4.0
+      ],
+      "angles_deg": [
+        45.0,
+        315.0,
+        315.0,
+        45.0
+      ],
+      "perimeter_m": 19.31370849898476,
+      "area_m2": 0.0,
+      "concave": true,
+      "self_crossing": true,
+      "closure_error_m": 0.0,
+      "angle_sum_error_deg": 360.0,
+      "closes": false,
+      "computed_sides": [],
+      "computed_angles": [],
+      "warnings": [
+        "self_crossing"
+      ]
+    }
+  }
+}

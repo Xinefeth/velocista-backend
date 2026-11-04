@@ -1,0 +1,146 @@
+{
+  "id": "FUN-32",
+  "title": "Consultar una medición terminada",
+  "request": {
+    "method": "GET",
+    "url": "/api/measurements/1",
+    "body": null
+  },
+  "expected_status": 200,
+  "response": {
+    "status": 200,
+    "body": {
+      "id": 1,
+      "device_id": "phone-fun",
+      "method": "steps",
+      "source": "phone",
+      "mount": "hand",
+      "place_name": "Aula 204",
+      "closed": true,
+      "reference": {
+        "points": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 10.0,
+            "y": 0.0
+          },
+          {
+            "x": 10.0,
+            "y": 6.0
+          },
+          {
+            "x": 0.0,
+            "y": 6.0
+          }
+        ],
+        "scale_n": 1.0,
+        "name": ""
+      },
+      "tape_side_m": null,
+      "calibration": {
+        "gyro_bias_dps": 0.40469780697104957,
+        "gyro_calibrated": true,
+        "step_length_m": 0.6978653530377669,
+        "speed_k": null,
+        "speed_c": 0.0,
+        "step_threshold_ms2": 1.2,
+        "step_min_interval_ms": 300
+      },
+      "status": "finished",
+      "reading_count": 1573,
+      "started_at": "2026-11-04T09:04:38.375553Z",
+      "finished_at": "2026-11-04T09:04:39.024482Z",
+      "result": {
+        "method": "steps",
+        "reading_count": 1573,
+        "step_count": 46,
+        "distance_m": 32.10180623973728,
+        "closure_error_m": 0.014378032076566542,
+        "closure_error_pct": 0.04478885695462416,
+        "heading_drift_deg": -0.14741718274717203,
+        "raw_perimeter_m": 32.11448905005715,
+        "raw_area_m2": 58.50829807389199,
+        "perimeter_m": 32.10180623973728,
+        "area_m2": 58.44192611646324,
+        "scale_factor": null,
+        "corners": 3,
+        "concave": false,
+        "self_crossing": false,
+        "quality": "green",
+        "reference_perimeter_m": 32.0,
+        "reference_area_m2": 60.0,
+        "perimeter_error_pct": 0.3181444991789961,
+        "area_error_pct": -2.596789805894595,
+        "min_gps_size_m": null,
+        "warnings": [],
+        "raw_path": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 0.6978653505005745,
+            "y": -5.9508295619897316e-05
+          },
+          {
+            "x": 1.3957306975331525,
+            "y": -0.00015105951949885598
+          },
+          {
+            "x": 2.0935960396264623,
+            "y": -0.00027465367144386375
+          },
+          {
+            "x": 2.7914613753092334,
+            "y": -0.0004302907511943539
+          },
+          "... 42 more (47 in total)"
+        ],
+        "corrected_path": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 0.6978653530377703,
+            "y": -1.036771999209472e-14
+          },
+          {
+            "x": 1.3957307060755406,
+            "y": -2.1683749142074432e-14
+          },
+          {
+            "x": 2.093596059113311,
+            "y": -3.394828606456125e-14
+          },
+          {
+            "x": 2.7914614121510812,
+            "y": -4.7161349675233464e-14
+          },
+          "... 42 more (47 in total)"
+        ],
+        "polygon": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 10.467980295566555,
+            "y": -2.54497174886092e-13
+          },
+          {
+            "x": 10.467980295566692,
+            "y": 5.582922824301812
+          },
+          {
+            "x": 2.402908383971292e-13,
+            "y": 5.582922824302204
+          }
+        ]
+      }
+    }
+  }
+}
