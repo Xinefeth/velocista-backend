@@ -518,3 +518,60 @@ class ModelRunOut(BaseModel):
             result=r.result,
             created_at=r.created_at,
         )
+
+
+class ModelEvaluationIn(_Strict):
+    measurement_ids: list[int] = Field(
+        min_length=2,
+        max_length=30,
+        description="Repeated measurements of the SAME place; the last one is kept for checking",
+    )
+    max_attempts: int = Field(default=40, ge=1, le=200)
+
+
+class ErrorSummaryOut(BaseModel):
+    mean_closure_error_m: float | None
+    mean_closure_error_pct: float | None
+    mean_abs_perimeter_error_pct: float | None = Field(
+        description="Only when the measurements have a plan or a tape side"
+    )
+    quality: str | None = Field(description="green | yellow | red for the mean closure error")
+
+
+class MeasurementErrorsOut(BaseModel):
+    closure_error_m: float
+    closure_error_pct: float
+    perimeter_error_pct: float | None
+
+
+class EvaluationRowOut(BaseModel):
+    measurement_id: int
+    role: str = Field(description="train (used to tune) | holdout (kept out to check)")
+    before: MeasurementErrorsOut
+    after: MeasurementErrorsOut
+
+
+class CurvePointOut(BaseModel):
+    attempt: int = Field(description="0 is the algorithm alone, before the first attempt")
+    without_model_pct: float | None
+    with_model_pct: float | None
+
+
+class ModelEvaluationOut(BaseModel):
+    method: str
+    measurement_count: int
+    train_count: int
+    holdout_measurement_id: int | None
+    green_limit_pct: float
+    initial_params: dict[str, float]
+    final_params: dict[str, float]
+    baseline: ErrorSummaryOut = Field(description="Algorithm alone (calibration + closure)")
+    model: ErrorSummaryOut = Field(description="Same algorithm with the tuned parameters")
+    improvement_pct_points: float | None
+    improved: bool = Field(description="The mean closure error went down with the model")
+    cost_improved: bool = Field(description="The model penalty (closure + plan error) went down")
+    meets_green: bool
+    generalizes: bool | None
+    verdict: str = Field(description="improves_green | improves_not_green | no_improvement")
+    curve: list[CurvePointOut]
+    measurements: list[EvaluationRowOut]
