@@ -122,9 +122,10 @@ class MeasurementsService:
             total_readings=m.reading_count + saved,
         )
 
-    def readings(self, measurement_id: int) -> list[Reading]:
-        self.get(measurement_id)
-        return self.repository.get_readings(measurement_id)
+    def readings_with_mount(self, measurement_id: int) -> tuple[str, list[Reading]]:
+        """Lecturas y montaje de su medición (EN-32, criterio 2): lee la medición una sola vez."""
+        m = self.get(measurement_id)
+        return m.mount, self.repository.get_readings(measurement_id)
 
     def finish(self, measurement_id: int) -> Measurement:
         """Calcula y guarda el resultado. Se puede llamar otra vez: recalcula."""

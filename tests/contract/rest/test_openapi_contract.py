@@ -172,3 +172,18 @@ def test_track_operations_use_the_agreed_ids(operations):
         "deleteTrack",
         "exportTrack",
     }
+
+
+def test_reading_output_exposes_the_mount_inherited_from_its_measurement(spec):
+    """EN-32 criterion 2: `mount` is in the output of a reading and not in what the phone sends."""
+    schemas = spec["components"]["schemas"]
+    out = schemas["ReadingOut"]
+    assert out["properties"]["mount"]["enum"] == ["hand", "robot"]
+    assert "mount" in out["required"]
+    assert "measurement" in out["properties"]["mount"]["description"]
+    assert out["example"]["mount"] == "hand"
+    assert "mount" not in schemas["ReadingIn"]["properties"]
+    operation = spec["paths"]["/api/measurements/{measurement_id}/readings"]["get"]
+    assert "mount" in operation["description"]
+    ref = operation["responses"]["200"]["content"]["application/json"]["schema"]["items"]["$ref"]
+    assert ref.endswith("/ReadingOut")
