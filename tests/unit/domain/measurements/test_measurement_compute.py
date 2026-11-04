@@ -3,6 +3,8 @@
 Each test walks a known shape with simulated phone readings and checks the error stays small.
 """
 
+from dataclasses import replace
+
 import pytest
 
 from support.measurement_fixtures import (
@@ -105,3 +107,66 @@ def test_too_few_readings_is_rejected():
     with pytest.raises(Validation) as e:
         compute_result(measurement(), walk_readings()[:60])
     assert e.value.reason == "measurement_too_short"
+
+
+# ------------------------------------------------------------------ giro total (HU-30, B1)
+
+
+def circle(n=24, radius=3.0, clockwise=False):
+    from math import cos, pi, sin
+
+    from velocista.domain.measurements.entities import XY
+
+    pts = [XY(radius * cos(2 * pi * i / n), radius * sin(2 * pi * i / n)) for i in range(n)]
+    return tuple(reversed(pts)) if clockwise else tuple(pts)
+
+
+def test_square_walked_clockwise_turns_about_minus_360():
+    clockwise = tuple(reversed(RECT_10x6))
+    r = compute_result(measurement(reference=clockwise), walk_readings(poly=clockwise))
+    assert r.turn_total_deg == pytest.approx(-360, abs=3)
+
+
+def test_square_walked_counterclockwise_turns_about_plus_360():
+    r = compute_result(measurement(), walk_readings())
+    assert r.turn_total_deg == pytest.approx(360, abs=3)
+
+
+@pytest.mark.parametrize("clockwise", [False, True])
+def test_circle_turns_a_full_360(clockwise):
+    poly = circle(clockwise=clockwise)
+    r = compute_result(measurement(reference=poly), walk_readings(poly=poly))
+    expected = -360 if clockwise else 360
+    assert r.turn_total_deg == pytest.approx(expected, abs=5)
+
+
+def test_total_turn_includes_the_leftover_drift():
+    r = compute_result(measurement(), walk_readings(gyro_bias_dps=0.5, gyro_noise_dps=0.3))
+    assert r.heading_drift_deg == pytest.approx(15, abs=3)
+    assert r.turn_total_deg == pytest.approx(360 + r.heading_drift_deg, abs=1)
+
+
+def test_open_walk_also_reports_its_turn():
+    # 3 esquinas a la izquierda y sin girar al final: 270°
+    r = compute_result(replace(measurement(), closed=False), walk_readings(face_start=False))
+    assert r.turn_total_deg == pytest.approx(270, abs=3)
+    assert r.heading_drift_deg is None
+
+
+def test_gps_measurement_has_no_total_turn():
+    r = compute_result(measurement(method="gps"), gps_walk_readings(scaled(RECT_10x6, 8)))
+    assert r.turn_total_deg is None
+
+
+def test_result_saved_before_hu30_reads_back_with_no_total_turn():
+    from velocista.infrastructure.persistence.repositories.measurements_repository import (
+        result_from_json,
+        result_to_json,
+    )
+
+    result = compute_result(measurement(), walk_readings())
+    data = result_to_json(result)
+    assert data["turn_total_deg"] == pytest.approx(360, abs=3)
+    assert result_from_json(data).turn_total_deg == data["turn_total_deg"]
+    legacy = {k: v for k, v in data.items() if k != "turn_total_deg"}
+    assert result_from_json(legacy).turn_total_deg is None

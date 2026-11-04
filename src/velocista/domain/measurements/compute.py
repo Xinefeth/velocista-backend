@@ -87,8 +87,11 @@ def _odometry_paths(m: Measurement, readings: Sequence[Reading]):
     warnings: list[str] = ["step_not_calibrated"] if default_step else []
     drift_deg = None
     corrected = raw
+    turn, t0, t1 = odo.total_turn(
+        motion, cal.gyro_bias_dps
+    )  # rad; también si el recorrido es abierto
+    turn_deg = degrees(turn)
     if m.closed:
-        turn, t0, t1 = odo.total_turn(motion, cal.gyro_bias_dps)
         fixed, excess = odo.correct_heading_drift(segments, turn, t0, t1)
         if excess is None:
             warnings.append("end_heading_unknown")
@@ -102,6 +105,7 @@ def _odometry_paths(m: Measurement, readings: Sequence[Reading]):
         times,
         len(segments) if m.method == "steps" else 0,
         drift_deg,
+        turn_deg,
         warnings,
     )
 
@@ -131,10 +135,10 @@ def compute_result(m: Measurement, readings: Sequence[Reading]) -> Result:
     min_gps = None
     if m.method == "gps":
         raw, measured, corrected, times, typical, warnings = _gps_paths(m, readings)
-        drift_deg, steps = None, 0
+        drift_deg, turn_deg, steps = None, None, 0
         min_gps = gps_mod.min_size_for(typical, GPS_TARGET_PCT)
     else:
-        raw, corrected, times, steps, drift_deg, warnings = _odometry_paths(m, readings)
+        raw, corrected, times, steps, drift_deg, turn_deg, warnings = _odometry_paths(m, readings)
         measured = raw
 
     distance = path_length(measured)
@@ -188,6 +192,7 @@ def compute_result(m: Measurement, readings: Sequence[Reading]) -> Result:
         perimeter_error_pct=pct_diff(perimeter, ref_p) if ref_p else None,
         area_error_pct=pct_diff(surface, ref_a) if ref_a else None,
         min_gps_size_m=min_gps,
+        turn_total_deg=turn_deg,
         warnings=tuple(warnings),
         raw_path=_thin(raw),
         corrected_path=_thin(corrected),
