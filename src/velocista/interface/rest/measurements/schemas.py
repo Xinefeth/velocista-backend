@@ -150,6 +150,26 @@ class ReadingIn(BaseModel):
 
 
 class ReadingOut(BaseModel):
+    """Una lectura guardada, tal como llegó del celular, más el montaje de su medición."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "seq": 12,
+                "t_ms": 1730592000240,
+                "kind": "motion",
+                "gyro_z_dps": 0.42,
+                "accel": [0.12, 0.31, 9.79],
+                "step": False,
+                "pwm": None,
+                "lat": None,
+                "lon": None,
+                "accuracy_m": None,
+                "mount": "hand",
+            }
+        }
+    )
+
     seq: int
     t_ms: int
     kind: str
@@ -160,9 +180,15 @@ class ReadingOut(BaseModel):
     lat: float | None
     lon: float | None
     accuracy_m: float | None
+    mount: Mount = Field(
+        description=(
+            "Where the phone was: `hand` or `robot`. Inherited from the measurement (it is not "
+            "stored per reading and the phone does not send it); `method: car` always means `robot`"
+        )
+    )
 
     @classmethod
-    def from_entity(cls, r: Reading) -> ReadingOut:
+    def from_entity(cls, r: Reading, mount: str) -> ReadingOut:
         return cls(
             seq=r.seq,
             t_ms=r.t_ms,
@@ -174,6 +200,7 @@ class ReadingOut(BaseModel):
             lat=r.lat,
             lon=r.lon,
             accuracy_m=r.accuracy_m,
+            mount=mount,
         )
 
 

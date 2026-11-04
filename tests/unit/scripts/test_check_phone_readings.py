@@ -554,3 +554,55 @@ def test_listing_pages_through_every_measurement_with_a_real_http_server():
     assert [offset for _, offset, _ in seen] == [0, 200, 400]
     assert {auth for _, _, auth in seen} == {"Bearer tok-de-prueba"}
     assert [m["id"] for m in chk.measurements_of_device(items, "a8b62dcb")] == [3]
+
+
+# ----- mount de cada lectura (informativo)
+
+
+def with_mount(readings, mount):
+    return [dict(r, mount=mount) for r in readings]
+
+
+@pytest.mark.parametrize("mount", ["hand", "robot"])
+def test_report_shows_the_mount_of_the_readings(mount):
+    result = chk.analyse(with_mount(rest_readings(), mount), "rest")
+    assert result["summary"]["mounts"] == [mount]
+    assert f"Montaje de las lecturas: {mount}" in chk.render(result)
+
+
+def test_old_readings_without_mount_still_work():
+    result = chk.analyse(rest_readings(), "rest")  # sin el campo, como antes de EN-32 criterio 2
+    assert result["summary"]["mounts"] == []
+    assert "no informado" in chk.render(result)
+    assert result["verdict"] == "APTO"
+
+
+def test_mount_is_only_informative_and_never_changes_the_findings():
+    def findings(result):
+        return {k: [(f.level, f.name) for f in v] for k, v in result["sections"].items()}
+
+    plain = chk.analyse(rest_readings(), "rest")
+    for mount in ("hand", "robot"):
+        other = chk.analyse(with_mount(rest_readings(), mount), "rest")
+        assert other["verdict"] == plain["verdict"]
+        assert findings(other) == findings(plain)
+
+
+def test_mixed_mounts_are_listed_without_failing():
+    readings = (
+        with_mount(rest_readings(3), "hand")[:50] + with_mount(rest_readings(3), "robot")[50:]
+    )
+    assert chk.analyse(readings)["summary"]["mounts"] == ["hand", "robot"]
+
+
+def test_main_file_with_and_without_mount(tmp_path, capsys):
+    new = tmp_path / "new.json"
+    new.write_text(json.dumps(with_mount(rest_readings(), "robot")), encoding="utf-8")
+    old = tmp_path / "old.json"
+    old.write_text(json.dumps(rest_readings()), encoding="utf-8")
+    assert chk.main(["--file", str(new), "--step", "rest"]) == 0
+    assert "Montaje de las lecturas: robot" in capsys.readouterr().out
+    assert chk.main(["--file", str(old), "--step", "rest"]) == 0
+    assert "no informado" in capsys.readouterr().out
+    assert chk.main(["--file", str(new), "--json"]) == 0
+    assert json.loads(capsys.readouterr().out)["summary"]["mounts"] == ["robot"]
