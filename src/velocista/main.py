@@ -19,6 +19,7 @@ from velocista.interface.rest.events.router import router as events_router
 from velocista.interface.rest.measurements.router import router as measurements_router
 from velocista.interface.rest.middleware import configure_logging, register_request_logging
 from velocista.interface.rest.optimization.router import router as optimization_router
+from velocista.interface.rest.polygons.router import router as polygons_router
 from velocista.interface.rest.rules.router import router as rules_router
 from velocista.interface.rest.runs.router import router as runs_router
 from velocista.interface.rest.tracks.router import router as tracks_router
@@ -36,6 +37,7 @@ MODULE_ROUTERS = [
     runs_router,
     tracks_router,
     measurements_router,
+    polygons_router,
     devices_router,
     websocket_router,
 ]
@@ -112,6 +114,10 @@ OPENAPI_TAGS = [
     {
         "name": "precision-model",
         "description": "Model that re-tunes the measurement parameters (SP-07).",
+    },
+    {
+        "name": "polygons",
+        "description": "Figures from known sides and angles or marked points (EN-42).",
     },
     {"name": "events", "description": "System log."},
     {"name": "control", "description": "Operating mode and line color of a robot."},
