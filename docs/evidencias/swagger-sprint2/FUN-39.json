@@ -1,0 +1,96 @@
+{
+  "id": "FUN-39",
+  "title": "Registrar una prueba del GPS con solo dos lecturas (inválido)",
+  "request": {
+    "method": "POST",
+    "url": "/api/gps-trials",
+    "body": {
+      "device_id": "phone-fun",
+      "place_name": "Cancha",
+      "environment": "open",
+      "real_distance_m": 50,
+      "start_fixes": [
+        {
+          "t_ms": 0,
+          "lat": -8.111560894493222,
+          "lon": -79.02866489402007,
+          "accuracy_m": 4.5
+        },
+        {
+          "t_ms": 1000,
+          "lat": -8.111620627105111,
+          "lon": -79.02869819219754,
+          "accuracy_m": 4.5
+        }
+      ],
+      "end_fixes": [
+        {
+          "t_ms": 0,
+          "lat": -8.111617883553434,
+          "lon": -79.0281820748355,
+          "accuracy_m": 4.5
+        },
+        {
+          "t_ms": 1000,
+          "lat": -8.11159604690551,
+          "lon": -79.02823503439772,
+          "accuracy_m": 4.5
+        },
+        {
+          "t_ms": 2000,
+          "lat": -8.111637828403843,
+          "lon": -79.02822303551689,
+          "accuracy_m": 4.5
+        },
+        {
+          "t_ms": 3000,
+          "lat": -8.111620274117165,
+          "lon": -79.02825709887155,
+          "accuracy_m": 4.5
+        },
+        {
+          "t_ms": 4000,
+          "lat": -8.111622766189507,
+          "lon": -79.02827508142462,
+          "accuracy_m": 4.5
+        },
+        "... 5 more (10 in total)"
+      ]
+    }
+  },
+  "expected_status": 422,
+  "response": {
+    "status": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "too_short",
+          "loc": [
+            "body",
+            "start_fixes"
+          ],
+          "msg": "List should have at least 3 items after validation, not 2",
+          "input": [
+            {
+              "t_ms": 0,
+              "lat": -8.111560894493222,
+              "lon": -79.02866489402007,
+              "accuracy_m": 4.5
+            },
+            {
+              "t_ms": 1000,
+              "lat": -8.111620627105111,
+              "lon": -79.02869819219754,
+              "accuracy_m": 4.5
+            }
+          ],
+          "ctx": {
+            "field_type": "List",
+            "min_length": 3,
+            "actual_length": 2
+          }
+        }
+      ]
+    }
+  }
+}

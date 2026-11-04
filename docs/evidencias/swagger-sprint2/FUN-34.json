@@ -1,0 +1,112 @@
+{
+  "id": "FUN-34",
+  "title": "Listar las mediciones de un celular",
+  "request": {
+    "method": "GET",
+    "url": "/api/measurements?device_id=phone-fun&limit=10",
+    "body": null
+  },
+  "expected_status": 200,
+  "response": {
+    "status": 200,
+    "body": {
+      "items": [
+        {
+          "id": 2,
+          "device_id": "phone-fun",
+          "method": "steps",
+          "source": "phone",
+          "mount": "hand",
+          "place_name": "Aula 204",
+          "closed": true,
+          "reference": {
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.0,
+                "y": 6.0
+              },
+              {
+                "x": 0.0,
+                "y": 6.0
+              }
+            ],
+            "scale_n": 1.0,
+            "name": ""
+          },
+          "tape_side_m": null,
+          "calibration": {
+            "gyro_bias_dps": 0.0,
+            "gyro_calibrated": false,
+            "step_length_m": null,
+            "speed_k": null,
+            "speed_c": 0.0,
+            "step_threshold_ms2": 1.2,
+            "step_min_interval_ms": 300
+          },
+          "status": "recording",
+          "reading_count": 0,
+          "started_at": "2026-11-04T09:04:40.333590Z",
+          "finished_at": null,
+          "result": null
+        },
+        {
+          "id": 1,
+          "device_id": "phone-fun",
+          "method": "steps",
+          "source": "phone",
+          "mount": "hand",
+          "place_name": "Aula 204",
+          "closed": true,
+          "reference": {
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.0,
+                "y": 6.0
+              },
+              {
+                "x": 0.0,
+                "y": 6.0
+              }
+            ],
+            "scale_n": 1.0,
+            "name": ""
+          },
+          "tape_side_m": null,
+          "calibration": {
+            "gyro_bias_dps": 0.0,
+            "gyro_calibrated": false,
+            "step_length_m": null,
+            "speed_k": null,
+            "speed_c": 0.0,
+            "step_threshold_ms2": 1.2,
+            "step_min_interval_ms": 300
+          },
+          "status": "recording",
+          "reading_count": 0,
+          "started_at": "2026-11-04T09:04:40.314441Z",
+          "finished_at": null,
+          "result": null
+        }
+      ],
+      "total": 2,
+      "limit": 10,
+      "offset": 0
+    }
+  }
+}

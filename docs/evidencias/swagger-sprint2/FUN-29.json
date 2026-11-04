@@ -1,0 +1,27 @@
+{
+  "id": "FUN-29",
+  "title": "Enviar lecturas a una medición que no existe",
+  "request": {
+    "method": "POST",
+    "url": "/api/measurements/999999/readings",
+    "body": {
+      "readings": [
+        {
+          "seq": 1,
+          "t_ms": 1,
+          "kind": "corner"
+        }
+      ]
+    }
+  },
+  "expected_status": 404,
+  "response": {
+    "status": 404,
+    "body": {
+      "detail": {
+        "reason": "measurement_not_found",
+        "detail": "Measurement does not exist"
+      }
+    }
+  }
+}

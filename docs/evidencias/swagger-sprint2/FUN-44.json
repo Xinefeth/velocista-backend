@@ -1,0 +1,129 @@
+{
+  "id": "FUN-44",
+  "title": "Correr el modelo de precisión con mediciones repetidas",
+  "request": {
+    "method": "POST",
+    "url": "/api/precision-model/runs",
+    "body": {
+      "measurement_ids": [
+        1,
+        2,
+        3
+      ],
+      "max_attempts": 30
+    }
+  },
+  "expected_status": 201,
+  "response": {
+    "status": 201,
+    "body": {
+      "id": 1,
+      "device_id": "phone-fun",
+      "measurement_ids": [
+        1,
+        2,
+        3
+      ],
+      "applied": false,
+      "result": {
+        "method": "steps",
+        "initial_params": {
+          "gyro_bias_dps": 0.004697806971049532,
+          "step_length_m": 0.7692307692307693
+        },
+        "final_params": {
+          "gyro_bias_dps": 0.42469780697104953,
+          "step_length_m": 0.7030307692307695
+        },
+        "baseline_cost": 14.262168673256841,
+        "final_cost": 1.2963932288385127,
+        "improved": true,
+        "meets_green": true,
+        "attempts": [
+          {
+            "attempt": 1,
+            "params": {
+              "gyro_bias_dps": 0.20469780697104956,
+              "step_length_m": 0.7692307692307693
+            },
+            "cost": 12.418647716387923,
+            "best_cost": 12.418647716387923,
+            "accepted": true
+          },
+          {
+            "attempt": 2,
+            "params": {
+              "gyro_bias_dps": 0.20469780697104956,
+              "step_length_m": 0.7892307692307693
+            },
+            "cost": 15.293647716387927,
+            "best_cost": 12.418647716387923,
+            "accepted": false
+          },
+          {
+            "attempt": 3,
+            "params": {
+              "gyro_bias_dps": 0.20469780697104956,
+              "step_length_m": 0.7492307692307693
+            },
+            "cost": 9.543647716387891,
+            "best_cost": 9.543647716387891,
+            "accepted": true
+          },
+          {
+            "attempt": 4,
+            "params": {
+              "gyro_bias_dps": 0.4246978069710496,
+              "step_length_m": 0.7492307692307693
+            },
+            "cost": 7.93764322883851,
+            "best_cost": 7.93764322883851,
+            "accepted": true
+          },
+          {
+            "attempt": 5,
+            "params": {
+              "gyro_bias_dps": 0.4246978069710496,
+              "step_length_m": 0.7712307692307693
+            },
+            "cost": 11.100143228838494,
+            "best_cost": 7.93764322883851,
+            "accepted": false
+          },
+          "... 25 more (30 in total)"
+        ],
+        "measurements": [
+          {
+            "measurement_id": 1,
+            "before": {
+              "closure_error_pct": 3.685248283829818,
+              "perimeter_error_pct": 10.576923076923105
+            },
+            "after": {
+              "closure_error_pct": 0.2357201424739435,
+              "perimeter_error_pct": 1.0606730769231465
+            }
+          },
+          {
+            "measurement_id": 2,
+            "before": {
+              "closure_error_pct": 3.6852429088376546,
+              "perimeter_error_pct": 10.576923076923105
+            },
+            "after": {
+              "closure_error_pct": 0.23572016135691579,
+              "perimeter_error_pct": 1.0606730769231465
+            }
+          }
+        ],
+        "holdout": {
+          "measurement_id": 3,
+          "baseline_cost": 14.262555078499654,
+          "tuned_cost": 1.296417489871866
+        },
+        "generalizes": true
+      },
+      "created_at": "2026-11-04T09:04:51.312994Z"
+    }
+  }
+}

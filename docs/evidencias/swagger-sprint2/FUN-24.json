@@ -1,0 +1,83 @@
+{
+  "id": "FUN-24",
+  "title": "Empezar una medición por pasos con plano de referencia",
+  "request": {
+    "method": "POST",
+    "url": "/api/measurements",
+    "body": {
+      "method": "steps",
+      "place_name": "Aula 204",
+      "device_id": "phone-fun",
+      "reference": {
+        "points": [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 10,
+            "y": 0
+          },
+          {
+            "x": 10,
+            "y": 6
+          },
+          {
+            "x": 0,
+            "y": 6
+          }
+        ]
+      }
+    }
+  },
+  "expected_status": 201,
+  "response": {
+    "status": 201,
+    "body": {
+      "id": 1,
+      "device_id": "phone-fun",
+      "method": "steps",
+      "source": "phone",
+      "mount": "hand",
+      "place_name": "Aula 204",
+      "closed": true,
+      "reference": {
+        "points": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 10.0,
+            "y": 0.0
+          },
+          {
+            "x": 10.0,
+            "y": 6.0
+          },
+          {
+            "x": 0.0,
+            "y": 6.0
+          }
+        ],
+        "scale_n": 1.0,
+        "name": ""
+      },
+      "tape_side_m": null,
+      "calibration": {
+        "gyro_bias_dps": 0.0,
+        "gyro_calibrated": false,
+        "step_length_m": null,
+        "speed_k": null,
+        "speed_c": 0.0,
+        "step_threshold_ms2": 1.2,
+        "step_min_interval_ms": 300
+      },
+      "status": "recording",
+      "reading_count": 0,
+      "started_at": "2026-11-04T09:04:31.789088Z",
+      "finished_at": null,
+      "result": null
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "id": "FUN-25",
+  "title": "Empezar una medición con un método que no existe (inválido)",
+  "request": {
+    "method": "POST",
+    "url": "/api/measurements",
+    "body": {
+      "method": "laser",
+      "place_name": "Aula",
+      "device_id": "phone-fun"
+    }
+  },
+  "expected_status": 422,
+  "response": {
+    "status": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "literal_error",
+          "loc": [
+            "body",
+            "method"
+          ],
+          "msg": "Input should be 'steps', 'gps' or 'car'",
+          "input": "laser",
+          "ctx": {
+            "expected": "'steps', 'gps' or 'car'"
+          }
+        }
+      ]
+    }
+  }
+}

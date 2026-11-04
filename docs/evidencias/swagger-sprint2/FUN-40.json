@@ -1,0 +1,57 @@
+{
+  "id": "FUN-40",
+  "title": "Resumen del error del GPS y lado mínimo del terreno",
+  "request": {
+    "method": "GET",
+    "url": "/api/gps-trials/summary?device_id=phone-fun",
+    "body": null
+  },
+  "expected_status": 200,
+  "response": {
+    "status": 200,
+    "body": {
+      "trials": 1,
+      "methods": {
+        "single": {
+          "mean_error_m": 3.526420784049783,
+          "max_error_m": 3.526420784049783,
+          "mean_error_pct": 7.052841568099566
+        },
+        "mean": {
+          "mean_error_m": 0.521055478451693,
+          "max_error_m": 0.521055478451693,
+          "mean_error_pct": 1.042110956903386
+        },
+        "filtered": {
+          "mean_error_m": 0.521055478451693,
+          "max_error_m": 0.521055478451693,
+          "mean_error_pct": 1.042110956903386
+        }
+      },
+      "best_method": "mean",
+      "improvement_pct": 85.22423980687562,
+      "mean_reported_accuracy_m": 4.5,
+      "target_pct": 10.0,
+      "min_side_m": 5.21055478451693,
+      "by_environment": {
+        "open": {
+          "single": {
+            "mean_error_m": 3.526420784049783,
+            "max_error_m": 3.526420784049783,
+            "mean_error_pct": 7.052841568099566
+          },
+          "mean": {
+            "mean_error_m": 0.521055478451693,
+            "max_error_m": 0.521055478451693,
+            "mean_error_pct": 1.042110956903386
+          },
+          "filtered": {
+            "mean_error_m": 0.521055478451693,
+            "max_error_m": 0.521055478451693,
+            "mean_error_pct": 1.042110956903386
+          }
+        }
+      }
+    }
+  }
+}

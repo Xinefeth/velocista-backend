@@ -1,0 +1,14 @@
+{
+  "id": "FUN-36",
+  "title": "Borrar una medición equivocada",
+  "request": {
+    "method": "DELETE",
+    "url": "/api/measurements/1",
+    "body": null
+  },
+  "expected_status": 204,
+  "response": {
+    "status": 204,
+    "body": null
+  }
+}

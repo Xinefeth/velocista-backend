@@ -1,0 +1,19 @@
+{
+  "id": "FUN-37",
+  "title": "Borrar una medición que no existe",
+  "request": {
+    "method": "DELETE",
+    "url": "/api/measurements/999999",
+    "body": null
+  },
+  "expected_status": 404,
+  "response": {
+    "status": 404,
+    "body": {
+      "detail": {
+        "reason": "measurement_not_found",
+        "detail": "Measurement does not exist"
+      }
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "id": "FUN-28",
+  "title": "Reenviar el mismo lote no duplica lecturas e informa las inválidas",
+  "request": {
+    "method": "POST",
+    "url": "/api/measurements/1/readings",
+    "body": {
+      "readings": [
+        {
+          "seq": 0,
+          "t_ms": 0,
+          "kind": "motion",
+          "gyro_z_dps": 0.1,
+          "accel": [
+            0,
+            0,
+            9.8
+          ]
+        },
+        {
+          "seq": 1,
+          "t_ms": 20,
+          "kind": "motion",
+          "gyro_z_dps": 0.1,
+          "accel": [
+            0,
+            0,
+            9.8
+          ]
+        },
+        {
+          "seq": 9,
+          "t_ms": 999,
+          "kind": "motion",
+          "gyro_z_dps": 99999
+        }
+      ]
+    }
+  },
+  "expected_status": 200,
+  "response": {
+    "status": 200,
+    "body": {
+      "accepted": 0,
+      "duplicates": 2,
+      "discarded": {
+        "gyro_out_of_range": 1
+      },
+      "total_readings": 2
+    }
+  }
+}

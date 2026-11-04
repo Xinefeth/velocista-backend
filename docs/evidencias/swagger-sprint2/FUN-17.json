@@ -1,0 +1,31 @@
+{
+  "id": "FUN-17",
+  "title": "Estado de calibración de un celular nuevo",
+  "request": {
+    "method": "GET",
+    "url": "/api/calibrations/new-phone",
+    "body": null
+  },
+  "expected_status": 200,
+  "response": {
+    "status": 200,
+    "body": {
+      "device_id": "new-phone",
+      "calibration": {
+        "gyro_bias_dps": 0.0,
+        "gyro_calibrated": false,
+        "step_length_m": null,
+        "speed_k": null,
+        "speed_c": 0.0,
+        "step_threshold_ms2": 1.2,
+        "step_min_interval_ms": 300
+      },
+      "ready": {
+        "steps": false,
+        "car": false,
+        "gps": true
+      },
+      "records": {}
+    }
+  }
+}

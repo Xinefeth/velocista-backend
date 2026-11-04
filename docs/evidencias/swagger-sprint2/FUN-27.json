@@ -1,0 +1,55 @@
+{
+  "id": "FUN-27",
+  "title": "Enviar un lote de lecturas del celular",
+  "request": {
+    "method": "POST",
+    "url": "/api/measurements/1/readings",
+    "body": {
+      "readings": [
+        {
+          "seq": 0,
+          "t_ms": 0,
+          "kind": "motion",
+          "gyro_z_dps": 0.1,
+          "accel": [
+            0,
+            0,
+            9.8
+          ]
+        },
+        {
+          "seq": 1,
+          "t_ms": 20,
+          "kind": "motion",
+          "gyro_z_dps": 0.1,
+          "accel": [
+            0,
+            0,
+            9.8
+          ]
+        },
+        {
+          "seq": 2,
+          "t_ms": 40,
+          "kind": "motion",
+          "gyro_z_dps": 0.1,
+          "accel": [
+            0,
+            0,
+            9.8
+          ]
+        }
+      ]
+    }
+  },
+  "expected_status": 200,
+  "response": {
+    "status": 200,
+    "body": {
+      "accepted": 3,
+      "duplicates": 0,
+      "discarded": {},
+      "total_readings": 3
+    }
+  }
+}

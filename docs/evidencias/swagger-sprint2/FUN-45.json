@@ -1,0 +1,24 @@
+{
+  "id": "FUN-45",
+  "title": "Correr el modelo con mediciones que no existen",
+  "request": {
+    "method": "POST",
+    "url": "/api/precision-model/runs",
+    "body": {
+      "measurement_ids": [
+        999998,
+        999999
+      ]
+    }
+  },
+  "expected_status": 404,
+  "response": {
+    "status": 404,
+    "body": {
+      "detail": {
+        "reason": "measurement_not_found",
+        "detail": "Measurement 999998 does not exist"
+      }
+    }
+  }
+}

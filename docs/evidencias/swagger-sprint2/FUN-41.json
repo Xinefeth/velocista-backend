@@ -1,0 +1,53 @@
+{
+  "id": "FUN-41",
+  "title": "Cambiar el nombre de una prueba del GPS",
+  "request": {
+    "method": "PATCH",
+    "url": "/api/gps-trials/1",
+    "body": {
+      "place_name": "Cancha sintética"
+    }
+  },
+  "expected_status": 200,
+  "response": {
+    "status": 200,
+    "body": {
+      "id": 1,
+      "device_id": "phone-fun",
+      "place_name": "Cancha sintética",
+      "environment": "open",
+      "real_distance_m": 50.0,
+      "fix_count": 20,
+      "result": {
+        "methods": {
+          "mean": {
+            "error_m": 0.521055478451693,
+            "error_pct": 1.042110956903386,
+            "gps_distance_m": 50.52105547845169
+          },
+          "single": {
+            "error_m": 3.526420784049783,
+            "error_pct": 7.052841568099566,
+            "gps_distance_m": 53.52642078404978
+          },
+          "filtered": {
+            "error_m": 0.521055478451693,
+            "error_pct": 1.042110956903386,
+            "gps_distance_m": 50.52105547845169
+          }
+        },
+        "fix_count": 20,
+        "end_spread": {
+          "cep50_m": 3.4315933845287243,
+          "cep95_m": 7.796575523197422
+        },
+        "start_spread": {
+          "cep50_m": 2.9914811874045935,
+          "cep95_m": 6.91801179398621
+        },
+        "reported_accuracy_m": 4.5
+      },
+      "created_at": "2026-11-04T09:04:46.449819Z"
+    }
+  }
+}

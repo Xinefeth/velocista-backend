@@ -1,0 +1,122 @@
+{
+  "id": "FUN-38",
+  "title": "Registrar una prueba de error del GPS frente a la cinta",
+  "request": {
+    "method": "POST",
+    "url": "/api/gps-trials",
+    "body": {
+      "device_id": "phone-fun",
+      "place_name": "Cancha",
+      "environment": "open",
+      "real_distance_m": 50,
+      "start_fixes": [
+        {
+          "t_ms": 0,
+          "lat": -8.111560894493222,
+          "lon": -79.02866489402007,
+          "accuracy_m": 4.5
+        },
+        {
+          "t_ms": 1000,
+          "lat": -8.111620627105111,
+          "lon": -79.02869819219754,
+          "accuracy_m": 4.5
+        },
+        {
+          "t_ms": 2000,
+          "lat": -8.111599154606317,
+          "lon": -79.02872976421735,
+          "accuracy_m": 4.5
+        },
+        {
+          "t_ms": 3000,
+          "lat": -8.111638765127346,
+          "lon": -79.02872785464841,
+          "accuracy_m": 4.5
+        },
+        {
+          "t_ms": 4000,
+          "lat": -8.111596401602464,
+          "lon": -79.02869456829292,
+          "accuracy_m": 4.5
+        },
+        "... 5 more (10 in total)"
+      ],
+      "end_fixes": [
+        {
+          "t_ms": 0,
+          "lat": -8.111617883553434,
+          "lon": -79.0281820748355,
+          "accuracy_m": 4.5
+        },
+        {
+          "t_ms": 1000,
+          "lat": -8.11159604690551,
+          "lon": -79.02823503439772,
+          "accuracy_m": 4.5
+        },
+        {
+          "t_ms": 2000,
+          "lat": -8.111637828403843,
+          "lon": -79.02822303551689,
+          "accuracy_m": 4.5
+        },
+        {
+          "t_ms": 3000,
+          "lat": -8.111620274117165,
+          "lon": -79.02825709887155,
+          "accuracy_m": 4.5
+        },
+        {
+          "t_ms": 4000,
+          "lat": -8.111622766189507,
+          "lon": -79.02827508142462,
+          "accuracy_m": 4.5
+        },
+        "... 5 more (10 in total)"
+      ]
+    }
+  },
+  "expected_status": 201,
+  "response": {
+    "status": 201,
+    "body": {
+      "id": 1,
+      "device_id": "phone-fun",
+      "place_name": "Cancha",
+      "environment": "open",
+      "real_distance_m": 50.0,
+      "fix_count": 20,
+      "result": {
+        "methods": {
+          "single": {
+            "gps_distance_m": 53.52642078404978,
+            "error_m": 3.526420784049783,
+            "error_pct": 7.052841568099566
+          },
+          "mean": {
+            "gps_distance_m": 50.52105547845169,
+            "error_m": 0.521055478451693,
+            "error_pct": 1.042110956903386
+          },
+          "filtered": {
+            "gps_distance_m": 50.52105547845169,
+            "error_m": 0.521055478451693,
+            "error_pct": 1.042110956903386
+          }
+        },
+        "reported_accuracy_m": 4.5,
+        "start_spread": {
+          "cep50_m": 2.9914811874045935,
+          "cep95_m": 6.91801179398621
+        },
+        "end_spread": {
+          "cep50_m": 3.4315933845287243,
+          "cep95_m": 7.796575523197422
+        },
+        "fix_count": 20
+      },
+      "created_at": "2026-11-04T09:04:44.263421Z"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "id": "FUN-53",
+  "title": "Listar los perfiles de reglamento",
+  "request": {
+    "method": "GET",
+    "url": "/api/profiles",
+    "body": null
+  },
+  "expected_status": 200,
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "id": "club",
+        "competition": "Club",
+        "label": "Club",
+        "category": "Racer",
+        "rules": {}
+      }
+    ]
+  }
+}
