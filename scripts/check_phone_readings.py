@@ -8,6 +8,12 @@ Uso (el token va en una variable de entorno, nunca en un archivo ni en la línea
     python scripts/check_phone_readings.py http://127.0.0.1:8000 42 --step rest
     python scripts/check_phone_readings.py https://mi-api.onrender.com 42 --login admin --step turn
     python scripts/check_phone_readings.py --file lecturas.json --step general
+    python scripts/check_phone_readings.py https://mi-api.onrender.com --device a8b62dcb --list
+    python scripts/check_phone_readings.py https://mi-api.onrender.com --device a8b62dcb --latest \
+        --login admin --step rest
+
+`--device` recibe el código de 8 caracteres que muestra la página (el device_id guardado es
+`cel-<uuid>`); `--list` muestra sus mediciones y `--latest` analiza la más reciente.
 
 Pasos de la guía (`--step`): general (solo integridad y señales de dato falso), rest (reposo),
 turn (giro de 360°), shake (agitar), gps (caminar 20 m), continuity (60 s), cut (corte de red).
@@ -32,6 +38,9 @@ from dataclasses import asdict, dataclass
 from urllib import error, parse, request
 
 TOKEN_ENV = "VELOCISTA_TOKEN"
+DEVICE_PREFIX = "cel-"  # el device_id que guarda la página es "cel-<uuid>"
+LIST_PAGE = 200  # máximo que acepta GET /api/measurements
+MAX_LIST_PAGES = 50  # tope de seguridad: 10 000 mediciones
 GRAVITY = 9.80665  # m/s²
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
 EARTH_RADIUS_M = 6_371_000
@@ -843,6 +852,70 @@ def login(base_url: str, username: str) -> str:
     return token
 
 
+def normalize_device_code(code: str) -> str:
+    """El código que muestra la página (primer trozo del uuid), con o sin el prefijo `cel-`."""
+    code = code.strip().lower()
+    if code.startswith(DEVICE_PREFIX):
+        code = code[len(DEVICE_PREFIX) :]
+    if len(code) < 4 or not all(c.isalnum() or c == "-" for c in code):
+        raise ApiError("El código del celular debe tener al menos 4 letras o números")
+    return code
+
+
+def list_all_measurements(base: str, token: str | None) -> list[dict]:
+    """Todas las mediciones (más recientes primero), página a página."""
+    items: list[dict] = []
+    for _ in range(MAX_LIST_PAGES):
+        page = api_request(
+            "GET", f"{base}/api/measurements?limit={LIST_PAGE}&offset={len(items)}", token
+        )
+        batch = page.get("items", []) if isinstance(page, dict) else []
+        items.extend(batch)
+        if not batch or len(items) >= page.get("total", 0):
+            break
+    return items
+
+
+def measurements_of_device(items: list[dict], code: str) -> list[dict]:
+    """Mediciones cuyo device_id empieza por `cel-` + código. Falla si el código es ambiguo.
+
+    El filtro `device_id` de la API es exacto, así que se filtra aquí. Si el código coincide con más
+    de un device_id no se adivina: se pide un código más largo.
+    """
+    wanted = DEVICE_PREFIX + normalize_device_code(code)
+    found = [m for m in items if str(m.get("device_id", "")).lower().startswith(wanted)]
+    devices = sorted({m["device_id"] for m in found})
+    if len(devices) > 1:
+        raise ApiError(
+            f"El código {code!r} coincide con {len(devices)} celulares ({', '.join(devices)}); "
+            "usa un código más largo"
+        )
+    return found
+
+
+def latest_measurement(found: list[dict]) -> dict:
+    return max(found, key=lambda m: (str(m.get("started_at", "")), m.get("id", 0)))
+
+
+def render_device_list(found: list[dict]) -> str:
+    """Lista corta por celular: id, método, estado, lecturas y fecha (sin lugar ni coordenadas)."""
+    lines = [
+        f"{'id':>6}  {'método':<7} {'estado':<10} {'lecturas':>8}  inicio",
+    ]
+    for m in sorted(found, key=lambda m: (str(m.get("started_at", "")), m.get("id", 0))):
+        lines.append(
+            f"{m.get('id'):>6}  {m.get('method', '?'):<7} {m.get('status', '?'):<10} "
+            f"{m.get('reading_count', 0):>8}  {m.get('started_at', '?')}"
+        )
+    lines.append(f"{len(found)} mediciones")
+    return "\n".join(lines)
+
+
+def device_list_json(found: list[dict]) -> str:
+    keys = ("id", "device_id", "method", "status", "reading_count", "started_at")
+    return json.dumps([{k: m.get(k) for k in keys} for m in found], ensure_ascii=False, indent=2)
+
+
 def load_readings_file(path: str) -> list[dict]:
     with open(path, encoding="utf-8") as fh:
         data = json.load(fh)
@@ -880,23 +953,56 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="USUARIO",
         help="pide la clave por teclado y usa el token solo en memoria",
     )
+    p.add_argument(
+        "--device",
+        metavar="CODIGO",
+        help="código del celular que muestra la página (por ejemplo a8b62dcb); "
+        "úsalo con --list o --latest en lugar del id de la medición",
+    )
+    p.add_argument("--list", action="store_true", help="con --device: lista sus mediciones")
+    p.add_argument(
+        "--latest", action="store_true", help="con --device: analiza su medición más reciente"
+    )
     p.add_argument("--allow-insecure", action="store_true", help="permite http fuera de localhost")
     p.add_argument("--json", action="store_true", help="imprime el informe en JSON")
     return p
+
+
+def _check_device_options(args) -> None:
+    if args.list and args.latest:
+        raise ApiError("Usa --list o --latest, no los dos")
+    if (args.list or args.latest) and not args.device:
+        raise ApiError("--list y --latest necesitan --device CODIGO")
+    if args.device:
+        if args.file:
+            raise ApiError("--device no se puede usar con --file")
+        if args.measurement_id is not None:
+            raise ApiError("Indica el id de la medición o --device, no los dos")
+        if not (args.list or args.latest):
+            raise ApiError("Con --device añade --list (ver mediciones) o --latest (analizar)")
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     meta = None
     try:
+        _check_device_options(args)
         if args.file:
             readings = load_readings_file(args.file)
         else:
-            if not args.base_url or args.measurement_id is None:
-                raise ApiError("Indica BASE_URL y MEASUREMENT_ID, o usa --file")
+            if not args.base_url or (args.measurement_id is None and not args.device):
+                raise ApiError("Indica BASE_URL y MEASUREMENT_ID (o --device), o usa --file")
             base = _check_base_url(args.base_url, args.allow_insecure)
             token = login(base, args.login) if args.login else os.environ.get(TOKEN_ENV)
             mid = args.measurement_id
+            if args.device:
+                found = measurements_of_device(list_all_measurements(base, token), args.device)
+                if not found:
+                    raise ApiError(f"No hay mediciones del celular {args.device!r}")
+                if args.list:
+                    print(device_list_json(found) if args.json else render_device_list(found))
+                    return 0
+                mid = latest_measurement(found)["id"]
             meta = api_request("GET", f"{base}/api/measurements/{mid}", token)
             readings = api_request("GET", f"{base}/api/measurements/{mid}/readings", token)
     except (ApiError, OSError, ValueError) as exc:
