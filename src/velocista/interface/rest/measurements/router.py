@@ -35,6 +35,7 @@ from velocista.interface.rest.measurements.schemas import (
     CalibrationRecordOut,
     CalibrationStateOut,
     CarCalibrationIn,
+    GpsSummaryOut,
     GpsTrialIn,
     GpsTrialOut,
     GpsTrialRenameIn,
@@ -372,21 +373,29 @@ def delete_gps_trial(trial_id: MeasurementId, service: GpsErrors):
 
 @gps_trials.get(
     "/summary",
+    response_model=GpsSummaryOut,
     operation_id="getGpsErrorSummary",
     summary="GPS error summary and minimum field size",
     description=(
         "Mean and max error per method, the best method, how much it improves over a single "
         "reading, and `min_side_m`: the smallest side for which the GPS error stays below "
-        "`target_pct` % (uses the max error of the best method)."
+        "`target_pct` % (uses the max error of the best method). Also, per environment "
+        "(`environments`), error against the taped distance (`by_distance`, `error_trend`), "
+        "the accuracy threshold to wait for before measuring (`by_accuracy`, "
+        "`recommended_accuracy_m`), how long to stand still (`by_wait`), the accuracy the phone "
+        "reports against the real error (`reported_vs_real`), warnings when there are fewer "
+        "than `min_trials` trials, and a `conclusion`. `target_pct` and `min_trials` default to "
+        "the server settings (GPS_TARGET_PCT, GPS_MIN_TRIALS)."
     ),
-    responses=error_responses({401: UNAUTHORIZED}),
+    responses=error_responses({401: UNAUTHORIZED, 422: INVALID}),
 )
 def gps_summary(
     service: GpsErrors,
     device_id: DeviceQuery = None,
-    target_pct: Annotated[float, Query(gt=0, le=100)] = 10.0,
+    target_pct: Annotated[float | None, Query(gt=0, le=100)] = None,
+    min_trials: Annotated[int | None, Query(ge=1, le=1000)] = None,
 ) -> dict:
-    return service.summary(device_id, target_pct)
+    return service.summary(device_id, target_pct, min_trials)
 
 
 # ------------------------------------------------------------------ modelo de precisión (SP-07)

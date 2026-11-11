@@ -521,6 +521,117 @@ class GpsTrialOut(BaseModel):
         )
 
 
+class GpsMethodErrorOut(BaseModel):
+    mean_error_m: float
+    max_error_m: float
+    mean_error_pct: float | None = None
+
+
+class GpsConfigOut(BaseModel):
+    target_pct: float = Field(description="Target error, % of the distance (GPS_TARGET_PCT)")
+    min_trials: int = Field(description="Minimum trials to conclude (GPS_MIN_TRIALS)")
+    accuracy_thresholds_m: list[float] = Field(description="Accuracy thresholds tried, m")
+    wait_seconds: list[float] = Field(description="Waiting times tried, s")
+    distance_bands_m: list[float] = Field(description="Edges of the distance bands, m")
+
+
+class GpsEnvironmentOut(BaseModel):
+    trials: int
+    enough_data: bool = Field(description="False when there are fewer trials than `min_trials`")
+    missing_trials: int = Field(description="How many trials are missing to reach the minimum")
+    best_method: str | None
+    mean_error_m: float | None
+    max_error_m: float | None
+    min_side_m: float | None = Field(
+        description="Recommended minimum side here: max error of the best method / target error",
+    )
+    methods: dict[str, GpsMethodErrorOut]
+
+
+class GpsDistanceBandOut(BaseModel):
+    from_m: float
+    to_m: float | None = Field(description="Null in the last band (no upper edge)")
+    trials: int
+    mean_error_m: float | None
+    max_error_m: float | None
+    mean_error_pct: float | None
+
+
+class GpsAccuracyOut(BaseModel):
+    max_accuracy_m: float = Field(description="Only readings with accuracy_m up to this value")
+    usable_trials: int = Field(description="Trials that keep at least 3 readings per point")
+    mean_error_m: float | None
+    max_error_m: float | None
+    mean_kept_pct: float | None = Field(description="% of readings kept")
+
+
+class GpsWaitOut(BaseModel):
+    seconds: float = Field(description="Only the first N seconds standing still at each point")
+    usable_trials: int
+    mean_error_m: float | None
+    max_error_m: float | None
+
+
+class GpsReportedVsRealOut(BaseModel):
+    trials: int
+    mean_reported_accuracy_m: float
+    mean_expected_error_m: float = Field(description="√2 × reported accuracy (two points)")
+    mean_real_error_m: float = Field(description="Real distance error using a single reading")
+    ratio: float | None = Field(description="real / expected; above 1 = optimistic phone")
+    optimistic: bool | None
+
+
+class GpsWarningOut(BaseModel):
+    code: Literal["gps_few_trials", "gps_environment_few_trials"]
+    environment: str | None
+    message: str = Field(description="Spanish text ready to show to the user")
+
+
+class GpsConclusionOut(BaseModel):
+    code: Literal["no_data", "insufficient_data", "ok"]
+    best_method: str | None
+    min_side_m: float | None
+    trials: int
+    ready_environments: list[str] = Field(
+        description="Environments with at least `min_trials` trials; only those are concluded"
+    )
+    text: str = Field(description="Spanish conclusion generated from the data")
+
+
+class GpsSummaryOut(BaseModel):
+    """GPS trials summary. The SP-06 fields are unchanged; the rest is CU-4."""
+
+    trials: int
+    methods: dict[str, GpsMethodErrorOut]
+    best_method: str | None
+    improvement_pct: float | None = Field(
+        default=None, description="% improvement over a single reading"
+    )
+    mean_reported_accuracy_m: float | None = None
+    target_pct: float | None = None
+    min_side_m: float | None = Field(description="Global minimum side (all environments mixed)")
+    by_environment: dict[str, dict[str, GpsMethodErrorOut]] = Field(
+        default_factory=dict, description="Error per method for each environment (SP-06)"
+    )
+    config: GpsConfigOut
+    environments: dict[str, GpsEnvironmentOut] = Field(
+        description="Recommended minimum side per environment (open, buildings, trees, indoor)"
+    )
+    by_distance: list[GpsDistanceBandOut] = Field(description="Error against the taped distance")
+    error_trend: Literal["flat", "grows"] | None = Field(
+        description="`flat`: the error in metres does not grow with distance (the minimum-side "
+        "rule holds). Null with fewer than 2 bands with data"
+    )
+    by_accuracy: list[GpsAccuracyOut] = Field(description="Error per accuracy threshold")
+    recommended_accuracy_m: float | None = Field(
+        description="Accuracy threshold with the lowest mean error; wait for the GPS to reach it"
+    )
+    by_wait: list[GpsWaitOut] = Field(description="Error by seconds standing still")
+    reported_vs_real: GpsReportedVsRealOut | None
+    warnings: list[GpsWarningOut]
+    conclusion: GpsConclusionOut
+
+
 # ------------------------------------------------------------------ modelo de precisión (SP-07)
 
 

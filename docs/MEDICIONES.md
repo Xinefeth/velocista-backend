@@ -127,6 +127,24 @@ Cada prueba (`POST /api/gps-trials`) devuelve el error frente a la cinta con 3 m
 
 Una medición GPS en un lugar más chico que eso avisa `gps_space_too_small`: hay que usar pasos.
 
+**CU-4: desde qué tamaño sirve el GPS** (`GET /api/gps-trials/summary`, detalle en
+[CONTRACT.md](CONTRACT.md)). Además del lado mínimo global, el resumen da:
+
+- el **lado mínimo por entorno** (`environments`), con `enough_data` falso si hay menos de
+  `min_trials` pruebas (por defecto 5) y avisos en `warnings`;
+- el **error frente a la distancia** (`by_distance`, `error_trend`): comprueba si el error en
+  metros no crece con la distancia, que es lo que supone la regla «error máximo ÷ 10 %»;
+- el **umbral de precisión para esperar antes de medir** (`by_accuracy`, `recommended_accuracy_m`)
+  y **cuánto quedarse quieto** (`by_wait`);
+- la **precisión que informa el celular frente al error real** (`reported_vs_real`);
+- una `conclusion` en español generada con los datos.
+
+El error objetivo, el mínimo de pruebas y los umbrales no están fijos en el código: se cambian con
+`GPS_TARGET_PCT`, `GPS_MIN_TRIALS`, `GPS_ACCURACY_THRESHOLDS_M`, `GPS_WAIT_SECONDS` y
+`GPS_DISTANCE_BANDS_M` (ver `.env.example`) o con los parámetros `target_pct` y `min_trials`.
+El giroscopio queda fuera por ahora. Para concluir con datos reales hacen falta pruebas en lugares
+conocidos, de varias distancias, al menos 5 por entorno.
+
 ### 4.5 Modelo de precisión (SP-07)
 
 Es un **ajuste por refuerzo simple** (prueba y error con castigo, del tipo Twiddle):

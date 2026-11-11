@@ -181,12 +181,42 @@ celular, ángulos en **grados**, giro en **°/s**, aceleración en **m/s²**.
 | `POST /api/calibrations/{device_id}/step` | Largo del paso: `{trials:[{distance_m (0–200], step_count o readings}]}` (1–10 pruebas). Avisa `uneven_pace` si difieren más de 2 cm | 201 · 401 · 422 |
 | `POST /api/calibrations/{device_id}/car` | Modelo de velocidad del coche `v = k·PWM + c`: `{trials:[{pwm (0–100], distance_m (0–100], seconds (0–600]}]}` (1–20 pruebas) | 201 · 401 · 422 |
 | `POST /api/gps-trials` | Guarda una prueba de error de GPS contra una distancia medida con cinta: `device_id`, `place_name`, `environment` (`open` / `buildings` / `trees` / `indoor`), `real_distance_m` (0–10000 m; 0 = mismo punto), `start_fixes` y `end_fixes` (3–600 cada una, `{t_ms, lat, lon, accuracy_m}`) | 201 · 401 · 422 |
-| `GET /api/gps-trials` · `GET /api/gps-trials/summary` | Lista (filtro `device_id`) y resumen del error por método y del tamaño mínimo de campo | 200 · 401 · 422 |
+| `GET /api/gps-trials` · `GET /api/gps-trials/summary` | Lista (filtro `device_id`) y resumen del error por método, tamaño mínimo de campo por entorno, error frente a la distancia, espera y precisión (ver «Resumen del error del GPS (CU-4)»). `summary` acepta `device_id`, `target_pct` (0–100) y `min_trials` (1–1000) | 200 · 401 · 422 |
 | `PATCH /api/gps-trials/{id}` | Cambia solo `place_name` | 200 · 401 · 404 · 422 |
 | `DELETE /api/gps-trials/{id}` | Borra una prueba de GPS (204 sin cuerpo); el resumen deja de contarla | 204 · 401 · 404 · 422 |
 | `POST /api/precision-model/runs` · `GET /api/precision-model/runs` | Ajusta sesgo del giro y largo del paso con mediciones repetidas del mismo lugar (`measurement_ids` 2–30, `max_attempts` 1–200, `apply`); lista las corridas | 201 / 200 · 401 · 404 · 422 |
 | `POST /api/precision-model/evaluations` | Compara el algoritmo solo contra el algoritmo con el modelo (`measurement_ids` 2–30, `max_attempts`). No guarda nada | 200 · 401 · 404 · 422 |
 | `POST /api/polygons/solve` · `POST /api/polygons/from-points` | Cierra una figura con lados y ángulos conocidos (`sides_m`, `angles_deg`; `null` = desconocido) o calcula lados, ángulos, perímetro y área de puntos marcados (`points` `{x, y}` en metros, 3–100). No guardan nada | 200 · 401 · 422 |
+
+### Resumen del error del GPS (CU-4) — `GET /api/gps-trials/summary`
+
+Parámetros: `device_id` (opcional), `target_pct` (error objetivo, % de la distancia; por defecto
+`GPS_TARGET_PCT` = 10) y `min_trials` (pruebas mínimas; por defecto `GPS_MIN_TRIALS` = 5).
+Las listas de umbrales vienen de `GPS_ACCURACY_THRESHOLDS_M` (3,5,10,20), `GPS_WAIT_SECONDS`
+(5,10,20) y `GPS_DISTANCE_BANDS_M` (5,20,50). Se devuelven en `config`. Cada prueba se vuelve a
+analizar con sus lecturas guardadas, así que las pruebas anteriores a CU-4 también cuentan.
+
+Campos de SP-06 (sin cambios): `trials`, `methods` (`single`, `mean`, `filtered` con `mean_error_m`,
+`max_error_m`, `mean_error_pct`), `best_method`, `improvement_pct`, `mean_reported_accuracy_m`,
+`target_pct`, `min_side_m` (global) y `by_environment` (`{entorno: methods}`).
+
+Campos nuevos de CU-4:
+
+| Campo | Contenido |
+|---|---|
+| `config` | `target_pct`, `min_trials`, `accuracy_thresholds_m`, `wait_seconds`, `distance_bands_m` |
+| `environments` | `{entorno: {trials, enough_data, missing_trials, best_method, mean_error_m, max_error_m, min_side_m, methods}}`: lado mínimo recomendado por entorno; `enough_data` es falso con menos de `min_trials` pruebas |
+| `by_distance` | Lista de bandas `{from_m, to_m, trials, mean_error_m, max_error_m, mean_error_pct}`; `to_m` es `null` en la última. Error del mejor método frente a la distancia de cinta |
+| `error_trend` | `flat` (el error en metros no crece con la distancia, la regla del lado mínimo vale), `grows` o `null` (menos de 2 bandas con datos) |
+| `by_accuracy` | `{max_accuracy_m, usable_trials, mean_error_m, max_error_m, mean_kept_pct}` por umbral: error si solo se usan lecturas con `accuracy_m` ≤ umbral |
+| `recommended_accuracy_m` | Umbral con menor error medio entre los que sirven en al menos la mitad de las pruebas (empate: el más laxo); `null` sin datos |
+| `by_wait` | `{seconds, usable_trials, mean_error_m, max_error_m}`: error usando solo los primeros N segundos quieto en cada punto |
+| `reported_vs_real` | `{trials, mean_reported_accuracy_m, mean_expected_error_m, mean_real_error_m, ratio, optimistic}`; el error esperado es √2 × la precisión informada (la distancia usa dos puntos); `ratio` > 1 = el celular es optimista; `null` sin pruebas |
+| `warnings` | `[{code, environment, message}]`: `gps_few_trials` (global) y `gps_environment_few_trials` (por entorno); `message` en español |
+| `conclusion` | `{code, best_method, min_side_m, trials, ready_environments, text}`: `no_data`, `insufficient_data` (ningún entorno llega a `min_trials`) u `ok` (al menos un entorno llega; solo esos entran en el texto y en `ready_environments`); `text` en español, generado con los datos |
+
+`result` de cada prueba (`POST` y lista) gana `by_wait` y `by_accuracy` (dicts con claves de texto);
+`methods` sigue con los tres métodos. No hay migración: `result` es JSON.
 
 ### Crear la medición — `MeasurementIn`
 

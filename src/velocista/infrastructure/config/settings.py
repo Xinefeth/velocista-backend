@@ -2,8 +2,10 @@
 
 from urllib.parse import quote
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from velocista.domain.measurements.gps_analysis import GpsConfig
 
 
 class Settings(BaseSettings):
@@ -32,6 +34,35 @@ class Settings(BaseSettings):
     admin_password: str = ""
     simulation_service_token: str = ""
     token_expire_minutes: int = Field(default=60, ge=1, le=1440)
+
+    # Análisis del error del GPS (CU-4). Las listas van separadas por comas, de menor a mayor.
+    gps_target_pct: float = Field(default=10.0, gt=0, le=100)
+    gps_min_trials: int = Field(default=5, ge=1, le=1000)
+    gps_accuracy_thresholds_m: str = "3,5,10,20"
+    gps_wait_seconds: str = "5,10,20"
+    gps_distance_bands_m: str = "5,20,50"
+
+    @field_validator("gps_accuracy_thresholds_m", "gps_wait_seconds", "gps_distance_bands_m")
+    @classmethod
+    def validate_number_list(cls, value: str) -> str:
+        numbers = cls._numbers(value)
+        if not numbers or numbers != sorted(set(numbers)) or numbers[0] <= 0:
+            raise ValueError("Use positive numbers separated by commas, from lowest to highest")
+        return value
+
+    @staticmethod
+    def _numbers(value: str) -> list[float]:
+        return [float(x) for x in value.split(",") if x.strip()]
+
+    def gps_config(self) -> GpsConfig:
+        """Parámetros del análisis del GPS, listos para el dominio."""
+        return GpsConfig(
+            target_pct=self.gps_target_pct,
+            min_trials=self.gps_min_trials,
+            accuracy_thresholds_m=tuple(self._numbers(self.gps_accuracy_thresholds_m)),
+            wait_seconds=tuple(self._numbers(self.gps_wait_seconds)),
+            distance_bands_m=tuple(self._numbers(self.gps_distance_bands_m)),
+        )
 
     @model_validator(mode="after")
     def validate_production_secrets(self):
