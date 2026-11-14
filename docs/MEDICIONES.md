@@ -145,6 +145,12 @@ El error objetivo, el mínimo de pruebas y los umbrales no están fijos en el c�
 El giroscopio queda fuera por ahora. Para concluir con datos reales hacen falta pruebas en lugares
 conocidos, de varias distancias, al menos 5 por entorno.
 
+Figuras con una zona angosta («llave», cuello de pocos metros): si la parte más angosta mide
+menos de 2 × la precisión típica del GPS, avisa `gps_narrow_section`. Si el suavizado deja el
+polígono cruzado, se recalcula con un suavizado más fuerte (`gps_smoothing_adjusted`). Y si el área
+con las esquinas marcadas difiere más de `CORNER_AREA_TOLERANCE_PCT` (10 %) del área del trazo,
+avisa `corner_area_mismatch` (puede faltar una esquina interior); ese aviso no cambia el cálculo.
+
 ### 4.5 Modelo de precisión (SP-07)
 
 Es un **ajuste por refuerzo simple** (prueba y error con castigo, del tipo Twiddle):

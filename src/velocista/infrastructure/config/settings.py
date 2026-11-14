@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     sim_command_timeout: float = Field(default=10, gt=0, le=120)
     sim_reconnect_max_seconds: float = Field(default=30, ge=1, le=300)
 
+    # Aviso corner_area_mismatch: diferencia (%) entre el área con esquinas y la del trazo completo.
+    corner_area_tolerance_pct: float = Field(default=10.0, gt=0, le=100)
+
     app_env: str = "development"
     log_level: str = "INFO"
     secret_key: str = "change-me"

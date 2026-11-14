@@ -154,6 +154,42 @@ def gps_walk_readings(poly, speed=1.2, sigma=3.0, seed=1) -> list[Reading]:
     return out
 
 
+def gps_walk_with_corners(poly, speed=1.2, sigma=3.0, seed=1, skip=()) -> list[Reading]:
+    """Como gps_walk_readings, pero marca una esquina en cada vértice (salvo el inicio).
+
+    `skip`: índices de vértices donde la persona olvida marcar la esquina.
+    """
+    rng = random.Random(seed)
+    out: list[Reading] = []
+    t = 0
+    n = len(poly)
+    for i in range(n):
+        a, b = poly[i], poly[(i + 1) % n]
+        if i > 0 and i not in skip:
+            out.append(Reading(len(out), t, "corner"))
+        k = max(2, round(hypot(b.x - a.x, b.y - a.y) / speed))
+        for s in range(k):
+            f = s / k
+            x = a.x + (b.x - a.x) * f + rng.gauss(0, sigma)
+            y = a.y + (b.y - a.y) * f + rng.gauss(0, sigma)
+            lat, lon = latlon(x, y)
+            out.append(Reading(len(out), t, "gps", lat=lat, lon=lon, accuracy_m=sigma * 1.5))
+            t += 1000
+    lat, lon = latlon(poly[0].x + rng.gauss(0, sigma), poly[0].y + rng.gauss(0, sigma))
+    out.append(Reading(len(out), t, "gps", lat=lat, lon=lon, accuracy_m=sigma * 1.5))
+    return out
+
+
+def key_shape() -> tuple[XY, ...]:
+    """Figura «llave»: octágono de 30 m, cuello de 4 m × 25 m y un pie en L (área ≈ 1006 m²)."""
+    octagon = [
+        XY(16.24 * cos(radians(a)), 45 + 16.24 * sin(radians(a)))
+        for a in (292.5, 337.5, 22.5, 67.5, 112.5, 157.5, 202.5, 247.5)
+    ]
+    foot = [XY(-2, 30), XY(-2, 5), XY(-30, 5), XY(-30, 0), XY(2, 0), XY(2, 30)]
+    return (*octagon, *foot)
+
+
 def scaled(poly, k: float):
     return tuple(XY(p.x * k, p.y * k) for p in poly)
 

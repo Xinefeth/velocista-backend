@@ -269,6 +269,9 @@ en m², giros en **grados**.
 | `scale_needs_corner` | Se dio `tape_side_m` pero no hay ninguna esquina marcada: no se pudo aplicar la escala |
 | `gps_low_accuracy_dropped` | Solo GPS: se descartaron lecturas con precisión mala |
 | `gps_space_too_small` | Solo GPS, recorrido cerrado: el lado típico (perímetro ÷ 4) es menor que `min_gps_size_m`; el lugar es demasiado pequeño para el GPS |
+| `gps_narrow_section` | Solo GPS, recorrido cerrado: la parte más angosta del polígono (menor distancia entre dos lados no vecinos) mide menos de 2 × la precisión típica del GPS; esa zona no se puede resolver y el área puede salir deformada |
+| `gps_smoothing_adjusted` | Solo GPS, recorrido cerrado: con el suavizado normal el polígono se cruzaba a sí mismo; se recalculó con un suavizado más fuerte. Si aun así se cruza, `self_crossing` sigue en `true` |
+| `corner_area_mismatch` | Hay esquinas marcadas y el área del polígono con esquinas difiere más de `CORNER_AREA_TOLERANCE_PCT` (10 % por defecto) del área del trazo completo: puede faltar marcar una esquina interior. No cambia el cálculo |
 
 ### Enviar lecturas — `POST /api/measurements/{id}/readings`
 

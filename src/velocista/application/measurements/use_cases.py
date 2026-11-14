@@ -18,7 +18,7 @@ from velocista.application.measurements.dto import IngestReport, MeasurementsPag
 from velocista.application.measurements.ports import MeasurementsRepository
 from velocista.domain.measurements import calibration as cal_mod
 from velocista.domain.measurements import gps_analysis as gps_an
-from velocista.domain.measurements.compute import compute_result
+from velocista.domain.measurements.compute import CORNER_AREA_TOLERANCE_PCT, compute_result
 from velocista.domain.measurements.entities import (
     ENVIRONMENTS,
     Calibration,
@@ -61,8 +61,13 @@ def snapshot(records: dict[str, CalibrationRecord]) -> Calibration:
 
 
 class MeasurementsService:
-    def __init__(self, repository: MeasurementsRepository):
+    def __init__(
+        self,
+        repository: MeasurementsRepository,
+        corner_area_tolerance_pct: float = CORNER_AREA_TOLERANCE_PCT,
+    ):
         self.repository = repository
+        self.corner_area_tolerance_pct = corner_area_tolerance_pct
 
     def start(self, m: Measurement) -> Measurement:
         """Crea una medición con la calibración vigente del celular (copia fija)."""
@@ -130,7 +135,9 @@ class MeasurementsService:
     def finish(self, measurement_id: int) -> Measurement:
         """Calcula y guarda el resultado. Se puede llamar otra vez: recalcula."""
         m = self.get(measurement_id)
-        result = compute_result(m, self.repository.get_readings(measurement_id))
+        result = compute_result(
+            m, self.repository.get_readings(measurement_id), self.corner_area_tolerance_pct
+        )
         return self.repository.save_result(measurement_id, result, datetime.now(UTC))
 
     def delete(self, measurement_id: int) -> None:
