@@ -17,7 +17,7 @@ from datetime import UTC, datetime
 from velocista.application.measurements.dto import IngestReport, MeasurementsPage
 from velocista.application.measurements.ports import MeasurementsRepository
 from velocista.domain.measurements import calibration as cal_mod
-from velocista.domain.measurements import gps as gps_mod
+from velocista.domain.measurements import gps_analysis as gps_an
 from velocista.domain.measurements.compute import compute_result
 from velocista.domain.measurements.entities import (
     ENVIRONMENTS,
@@ -200,8 +200,9 @@ class CalibrationService:
 
 
 class GpsErrorService:
-    def __init__(self, repository: MeasurementsRepository):
+    def __init__(self, repository: MeasurementsRepository, config: gps_an.GpsConfig | None = None):
         self.repository = repository
+        self.config = config or gps_an.GpsConfig()
 
     def add_trial(self, trial: GpsTrial) -> GpsTrial:
         if trial.environment not in ENVIRONMENTS:
@@ -210,7 +211,9 @@ class GpsErrorService:
             raise Validation("gps_trial_place", f"place_name needs 1 to {PLACE_MAX} characters")
         if not 0 <= trial.real_distance_m <= 10_000:
             raise Validation("gps_trial_distance", "real_distance_m must be 0 to 10000 m")
-        result = gps_mod.trial_errors(trial.start_fixes, trial.end_fixes, trial.real_distance_m)
+        result = gps_an.trial_analysis(
+            trial.start_fixes, trial.end_fixes, trial.real_distance_m, self.config
+        )
         return self.repository.add_gps_trial(replace(trial, result=result))
 
     def list(self, device_id: str | None = None) -> list[GpsTrial]:
@@ -231,16 +234,32 @@ class GpsErrorService:
         if not self.repository.delete_gps_trial(trial_id):
             raise NotFound("gps_trial_not_found", "GPS trial does not exist")
 
-    def summary(self, device_id: str | None = None, target_pct: float = 10.0) -> dict:
-        trials = self.repository.list_gps_trials(device_id)
-        out = gps_mod.trials_summary([t.result for t in trials], target_pct)
-        by_env: dict[str, list[dict]] = {}
-        for t in trials:
-            by_env.setdefault(t.environment, []).append(t.result)
-        out["by_environment"] = {
-            env: gps_mod.trials_summary(rows, target_pct)["methods"] for env, rows in by_env.items()
-        }
-        return out
+    def summary(
+        self,
+        device_id: str | None = None,
+        target_pct: float | None = None,
+        min_trials: int | None = None,
+    ) -> dict:
+        """Resumen de las pruebas: lado mínimo por entorno, error frente a la distancia, etc.
+
+        `target_pct` y `min_trials` salen de la configuración del servidor si no se indican.
+        Cada prueba se vuelve a analizar con sus lecturas guardadas, así las pruebas viejas
+        (sin `by_wait` ni `by_accuracy`) también entran en el análisis nuevo.
+        """
+        cfg = replace(
+            self.config,
+            target_pct=self.config.target_pct if target_pct is None else target_pct,
+            min_trials=self.config.min_trials if min_trials is None else min_trials,
+        )
+        rows = [
+            gps_an.TrialRow(
+                environment=t.environment,
+                real_distance_m=t.real_distance_m,
+                result=gps_an.trial_analysis(t.start_fixes, t.end_fixes, t.real_distance_m, cfg),
+            )
+            for t in self.repository.list_gps_trials(device_id)
+        ]
+        return gps_an.summarize(rows, cfg)
 
 
 class PrecisionModelService:
