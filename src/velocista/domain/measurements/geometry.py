@@ -73,6 +73,38 @@ def self_crossing(points: Sequence[XY]) -> bool:
     return False
 
 
+def _point_segment(p: XY, a: XY, b: XY) -> float:
+    dx, dy = b.x - a.x, b.y - a.y
+    sq = dx * dx + dy * dy
+    t = 0.0 if sq == 0 else max(0.0, min(1.0, ((p.x - a.x) * dx + (p.y - a.y) * dy) / sq))
+    return dist(p, XY(a.x + t * dx, a.y + t * dy))
+
+
+def min_width(points: Sequence[XY]) -> float | None:
+    """Menor distancia entre dos lados no vecinos: el ancho de la parte más angosta.
+
+    Sirve para polígonos simples; devuelve None si no hay lados no vecinos (menos de 4 lados).
+    """
+    n = len(points)
+    best = None
+    for i in range(n):
+        for j in range(i + 2, n):
+            if i == 0 and j == n - 1:
+                continue
+            a, b = points[i], points[(i + 1) % n]
+            c, d = points[j], points[(j + 1) % n]
+            if _ccw(a, c, d) != _ccw(b, c, d) and _ccw(a, b, c) != _ccw(a, b, d):
+                return 0.0
+            d_ij = min(
+                _point_segment(a, c, d),
+                _point_segment(b, c, d),
+                _point_segment(c, a, b),
+                _point_segment(d, a, b),
+            )
+            best = d_ij if best is None else min(best, d_ij)
+    return best
+
+
 def to_local(lat: float, lon: float, lat0: float, lon0: float) -> XY:
     """Latitud y longitud a metros en un plano local con origen en (lat0, lon0).
 

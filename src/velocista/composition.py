@@ -63,7 +63,9 @@ def get_tracks_service(session: DbSession) -> TracksService:
 
 
 def get_measurements_service(session: DbSession) -> MeasurementsService:
-    return MeasurementsService(SqlAlchemyMeasurementsRepository(session))
+    return MeasurementsService(
+        SqlAlchemyMeasurementsRepository(session), settings.corner_area_tolerance_pct
+    )
 
 
 def get_calibration_service(session: DbSession) -> CalibrationService:

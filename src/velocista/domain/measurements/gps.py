@@ -20,6 +20,8 @@ from velocista.domain.shared.errors import Validation
 
 MAX_ACCURACY_M = 25.0  # peor precisión aceptada en un recorrido
 WALK_ACCEL_STD = 1.0  # m/s²: cuánto puede cambiar la velocidad de una persona (ruido del modelo)
+# Suavizados más fuertes (menos aceleración permitida): se usan si el polígono se cruza.
+FALLBACK_ACCEL_STD = (0.5, 0.3)
 GPS_METHODS = ("single", "mean", "filtered")
 
 
@@ -39,10 +41,12 @@ def filter_fixes(fixes: Sequence[Fix], max_accuracy_m: float = MAX_ACCURACY_M) -
     return [f for f in fixes if f.accuracy_m <= limit]
 
 
-def _kalman_axis(times: Sequence[float], values: Sequence[float], var: Sequence[float]):
+def _kalman_axis(
+    times: Sequence[float], values: Sequence[float], var: Sequence[float], accel_std: float
+):
     """Kalman de velocidad constante en un eje + suavizado RTS. Devuelve las posiciones."""
     n = len(values)
-    q = WALK_ACCEL_STD**2
+    q = accel_std**2
     xs, ps, xp, pp = [], [], [], []
     x = [values[0], 0.0]
     p = [[var[0], 0.0], [0.0, 4.0]]
@@ -110,7 +114,7 @@ def local_points(fixes: Sequence[Fix]) -> list[XY]:
     return [to_local(f.lat, f.lon, lat0, lon0) for f in fixes]
 
 
-def smooth_track(fixes: Sequence[Fix]) -> list[XY]:
+def smooth_track(fixes: Sequence[Fix], accel_std: float = WALK_ACCEL_STD) -> list[XY]:
     """Recorrido GPS suavizado en metros (origen en la primera lectura)."""
     if len(fixes) < 3:
         return local_points(fixes)
@@ -118,8 +122,8 @@ def smooth_track(fixes: Sequence[Fix]) -> list[XY]:
     times = [f.t_ms / 1000 for f in fixes]
     # La precisión informada es un radio (~68 %); por eje la varianza es la mitad.
     var = [max(f.accuracy_m, 0.5) ** 2 / 2 for f in fixes]
-    xs = _kalman_axis(times, [p.x for p in pts], var)
-    ys = _kalman_axis(times, [p.y for p in pts], var)
+    xs = _kalman_axis(times, [p.x for p in pts], var, accel_std)
+    ys = _kalman_axis(times, [p.y for p in pts], var, accel_std)
     return [XY(x, y) for x, y in zip(xs, ys, strict=True)]
 
 

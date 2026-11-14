@@ -26,6 +26,7 @@ from velocista.domain.measurements.geometry import (
     area,
     dist,
     is_concave,
+    min_width,
     path_length,
     pct_diff,
     self_crossing,
@@ -37,6 +38,10 @@ MIN_SEGMENTS = 4
 DEFAULT_STEP_M = 0.70  # paso promedio de un adulto, si el celular no calibró el suyo
 MAX_PATH_POINTS = 1000
 GPS_TARGET_PCT = 10.0  # error del GPS aceptable frente al tamaño del lugar
+# Si el área con esquinas difiere más de esto del área del trazo completo, falta una esquina.
+CORNER_AREA_TOLERANCE_PCT = 10.0
+# Una parte del polígono más angosta que esto × la precisión típica del GPS no se puede medir.
+NARROW_FACTOR = 2.0
 
 
 def _thin(points: Sequence[XY], limit: int = MAX_PATH_POINTS) -> tuple[XY, ...]:
@@ -110,12 +115,18 @@ def _odometry_paths(m: Measurement, readings: Sequence[Reading]):
     )
 
 
-def _gps_paths(m: Measurement, readings: Sequence[Reading]):
-    fixes = [
+def _gps_fixes(readings: Sequence[Reading]) -> list[gps_mod.Fix]:
+    return [
         gps_mod.Fix(r.t_ms, r.lat, r.lon, r.accuracy_m)
         for r in sorted(readings, key=lambda r: (r.t_ms, r.seq))
         if r.kind == "gps"
     ]
+
+
+def _gps_paths(
+    m: Measurement, readings: Sequence[Reading], accel_std: float = gps_mod.WALK_ACCEL_STD
+):
+    fixes = _gps_fixes(readings)
     kept = gps_mod.filter_fixes(fixes)
     if len(kept) < MIN_SEGMENTS:
         raise Validation(
@@ -123,18 +134,31 @@ def _gps_paths(m: Measurement, readings: Sequence[Reading]):
             f"Need at least {MIN_SEGMENTS} GPS readings with good accuracy",
         )
     raw = gps_mod.local_points(kept)
-    smooth = gps_mod.smooth_track(kept)
+    smooth = gps_mod.smooth_track(kept, accel_std)
     corrected = odo.distribute_closure(smooth) if m.closed else smooth
     warnings = ["gps_low_accuracy_dropped"] if len(kept) < len(fixes) else []
     typical = median(f.accuracy_m for f in kept)
     return raw, smooth, corrected, [f.t_ms for f in kept[1:]], typical, warnings
 
 
-def compute_result(m: Measurement, readings: Sequence[Reading]) -> Result:
+def compute_result(
+    m: Measurement,
+    readings: Sequence[Reading],
+    corner_area_tolerance_pct: float = CORNER_AREA_TOLERANCE_PCT,
+) -> Result:
     corners_t = [r.t_ms for r in readings if r.kind == "corner"]
     min_gps = None
     if m.method == "gps":
         raw, measured, corrected, times, typical, warnings = _gps_paths(m, readings)
+        if m.closed:
+            # El suavizado no debe dejar un polígono que se cruza (cuellos angostos): si pasa,
+            # se reintenta con un suavizado más fuerte y se avisa.
+            corner_idx = [_index_at(times, t) for t in corners_t]
+            for accel in gps_mod.FALLBACK_ACCEL_STD:
+                if not self_crossing(_polygon(corrected, corner_idx, True)):
+                    break
+                raw, measured, corrected, times, typical, warnings = _gps_paths(m, readings, accel)
+                warnings.append("gps_smoothing_adjusted")
         drift_deg, turn_deg, steps = None, None, 0
         min_gps = gps_mod.min_size_for(typical, GPS_TARGET_PCT)
     else:
@@ -148,6 +172,11 @@ def compute_result(m: Measurement, readings: Sequence[Reading]) -> Result:
 
     raw_poly = _polygon(measured, corner_idx, m.closed)
     poly = _polygon(corrected, corner_idx, m.closed)
+    inner_corners = {i for i in corner_idx if 0 < i < len(corrected) - 1}
+    if m.closed and len(inner_corners) >= 2 and len(corrected) > 2:
+        full = area(corrected)
+        if full > 0 and abs(area(poly) - full) / full * 100 > corner_area_tolerance_pct:
+            warnings.append("corner_area_mismatch")
     scale = None
     if m.tape_side_m:
         inner = sorted({i for i in corner_idx if 0 < i < len(corrected) - 1})
@@ -164,6 +193,10 @@ def compute_result(m: Measurement, readings: Sequence[Reading]) -> Result:
     surface = area(poly) if m.closed else 0.0
     if min_gps is not None and m.closed and perimeter / 4 < min_gps:
         warnings.append("gps_space_too_small")
+    if m.method == "gps" and m.closed and len(poly) >= 4:
+        narrow = min_width(poly)
+        if narrow is not None and narrow < NARROW_FACTOR * typical:
+            warnings.append("gps_narrow_section")
 
     ref_p = ref_a = None
     if m.reference is not None:
