@@ -15,12 +15,14 @@ from velocista.domain.measurements.entities import (
     Measurement,
     Reading,
 )
+from velocista.domain.measurements.geometry import self_crossing
 from velocista.domain.shared.errors import Validation
 
 PLACE_MAX = 80
 DEVICE_MAX = 64
 TAPE_SIDE_MAX_M = 1000
 REFERENCE_MAX_POINTS = 200
+REFERENCE_DIRECTIONS = ("cw", "ccw")
 REFERENCE_COORD_MAX = 10000
 SCALE_MAX = 10000
 BATCH_MAX = 1000  # lecturas por envío
@@ -62,6 +64,19 @@ def validate_measurement(m: Measurement) -> None:
             for p in ref.points
         ):
             raise Validation("measurement_reference_invalid", "Reference coordinates out of range")
+        if ref.start_index is not None and not 0 <= ref.start_index < len(ref.points):
+            raise Validation(
+                "measurement_reference_invalid",
+                f"start_index must be 0 to {len(ref.points) - 1}",
+            )
+        if ref.direction is not None and ref.direction not in REFERENCE_DIRECTIONS:
+            raise Validation(
+                "measurement_reference_invalid", f"direction must be one of {REFERENCE_DIRECTIONS}"
+            )
+        if self_crossing(list(ref.points)):
+            raise Validation(
+                "measurement_reference_self_crossing", "The reference plan crosses itself"
+            )
 
 
 def _bad(value: float | None, limit: float) -> bool:
