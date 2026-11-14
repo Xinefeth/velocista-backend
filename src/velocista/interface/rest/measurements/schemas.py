@@ -55,9 +55,21 @@ class ReferenceIO(_Strict):
         description="Plan scale 1:N (real = drawn × N)",
     )
     name: str = Field(default="", max_length=80)
+    start_index: int | None = Field(
+        default=None, ge=0, description="Index of the start vertex of the guided walk"
+    )
+    direction: Literal["cw", "ccw"] | None = Field(
+        default=None, description="Walking direction around the plan: clockwise or counter"
+    )
 
     def to_entity(self) -> Reference:
-        return Reference(tuple(XY(p.x, p.y) for p in self.points), self.scale_n, self.name)
+        return Reference(
+            tuple(XY(p.x, p.y) for p in self.points),
+            self.scale_n,
+            self.name,
+            self.start_index,
+            self.direction,
+        )
 
 
 class MeasurementIn(_Strict):
@@ -298,6 +310,8 @@ class MeasurementOut(BaseModel):
                 points=[MetrePointIO(x=p.x, y=p.y) for p in m.reference.points],
                 scale_n=m.reference.scale_n,
                 name=m.reference.name,
+                start_index=m.reference.start_index,
+                direction=m.reference.direction,
             )
         c = m.calibration
         return cls(

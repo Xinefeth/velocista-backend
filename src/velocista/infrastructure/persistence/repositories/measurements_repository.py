@@ -61,13 +61,21 @@ def _reference_to_json(ref: Reference | None) -> dict | None:
         "points": [asdict(p) for p in ref.points],
         "scale_n": ref.scale_n,
         "name": ref.name,
+        "start_index": ref.start_index,
+        "direction": ref.direction,
     }
 
 
 def _reference_from_json(data: dict | None) -> Reference | None:
     if data is None:
         return None
-    return Reference(_points(data["points"]), data.get("scale_n", 1.0), data.get("name", ""))
+    return Reference(
+        _points(data["points"]),
+        data.get("scale_n", 1.0),
+        data.get("name", ""),
+        data.get("start_index"),
+        data.get("direction"),
+    )
 
 
 def _measurement(row: MeasurementModel) -> Measurement:

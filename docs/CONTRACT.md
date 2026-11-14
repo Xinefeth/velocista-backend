@@ -228,7 +228,7 @@ Campos nuevos de CU-4:
 | `place_name` * | texto 1–80 | Lugar medido |
 | `device_id` * | texto 1–64 | Identificador del celular (UUID) |
 | `closed` | booleano, defecto `true` | `true` si el recorrido vuelve al punto de partida |
-| `reference` | `{points:[{x,y}] (3–200), scale_n (>0, ≤10000, defecto 1), name (≤80)}` o `null` | Plano a comparar, en metros, escala 1:N |
+| `reference` | `{points:[{x,y}] (3–200), scale_n (>0, ≤10000, defecto 1), name (≤80), start_index (0..n-1, opcional), direction ("cw"\|"ccw", opcional)}` o `null` | Plano a comparar y guía del recorrido; ver «Plano de referencia» abajo |
 | `tape_side_m` | número en (0, 1000] o `null` | Primer lado medido con cinta (salida → primera esquina), en metros |
 
 Los campos no listados se rechazan con 422. `MeasurementOut` devuelve además `id`, `calibration`, `status`
@@ -259,6 +259,19 @@ en m², giros en **grados**.
 
 `turn_total_deg` y `heading_drift_deg` se leen juntos: en una vuelta cerrada bien hecha el giro total es
 ±360° y el sobrante, cercano a 0; un sobrante grande indica deriva del giroscopio (conviene calibrarlo).
+
+**Plano de referencia (`reference`)**
+
+- Sirve cualquier polígono simple, cóncavo incluido (3 a 200 vértices). Convención: `points` van en
+  metros **como se dibujaron** y el tamaño real es `punto × scale_n`. Con `scale_n = 1` los puntos ya
+  son metros reales del terreno (lo que envía el celular tras convertir el plano 1:N).
+  Ejemplo: una L de 12 × 4 m más un brazo de 4 × 6 m da `reference_perimeter_m` = 44 y
+  `reference_area_m2` = 72, ya sea con puntos reales y `scale_n = 1` o con puntos ÷ 100 y `scale_n = 100`.
+- `start_index` (vértice de partida) y `direction` (`cw` o `ccw`) son opcionales: el backend solo los
+  guarda y los devuelve tal cual en `GET`; no cambian ningún cálculo. Un `start_index` fuera de
+  `0..n-1` o un `direction` distinto de `cw`/`ccw` se rechaza con 422.
+- Un plano cuyo contorno se cruza a sí mismo se rechaza con **422** `measurement_reference_self_crossing`
+  (su área no sería válida). Otros planos mal formados dan `measurement_reference_invalid`.
 
 **Avisos (`warnings`)**
 

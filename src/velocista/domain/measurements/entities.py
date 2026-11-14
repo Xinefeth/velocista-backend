@@ -64,6 +64,9 @@ class Reference:
     points: tuple[XY, ...]
     scale_n: float = 1.0
     name: str = ""
+    # Guía del recorrido sobre el plano (opcionales): vértice de partida y sentido de giro.
+    start_index: int | None = None
+    direction: str | None = None  # "cw" | "ccw"
 
     def real_points(self) -> tuple[XY, ...]:
         return tuple(XY(p.x * self.scale_n, p.y * self.scale_n) for p in self.points)
