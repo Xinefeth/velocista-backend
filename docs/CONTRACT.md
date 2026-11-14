@@ -279,6 +279,7 @@ en m², giros en **grados**.
 |---|---|
 | `step_not_calibrated` | Método `steps` sin calibración del paso: se usó un paso promedio |
 | `end_heading_unknown` | Recorrido cerrado cuyo giro total no está a ±45° de un múltiplo de 360° (no se volvió a orientar al final): no se corrigió el giro y `heading_drift_deg` es `null` |
+| `gyro_calibration_suspect` | Pasos o `car`, recorrido cerrado: además de `end_heading_unknown`, el giro total queda a más de 100° de un múltiplo de 360° (no se explica por no orientarse al final, que da ~90°): el giroscopio parece mal calibrado; conviene recalibrar y repetir. Solo informa, no cambia ningún cálculo |
 | `scale_needs_corner` | Se dio `tape_side_m` pero no hay ninguna esquina marcada: no se pudo aplicar la escala |
 | `gps_low_accuracy_dropped` | Solo GPS: se descartaron lecturas con precisión mala |
 | `gps_space_too_small` | Solo GPS, recorrido cerrado: el lado típico (perímetro ÷ 4) es menor que `min_gps_size_m`; el lugar es demasiado pequeño para el GPS |
