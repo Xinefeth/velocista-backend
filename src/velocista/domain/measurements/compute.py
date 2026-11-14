@@ -42,6 +42,9 @@ GPS_TARGET_PCT = 10.0  # error del GPS aceptable frente al tamaño del lugar
 CORNER_AREA_TOLERANCE_PCT = 10.0
 # Una parte del polígono más angosta que esto × la precisión típica del GPS no se puede medir.
 NARROW_FACTOR = 2.0
+# Si el giro total queda a más de esto de un múltiplo de 360° no es que la persona no se orientó
+# al final (eso da ~90°): el giroscopio está mal calibrado. Solo informa.
+GYRO_SUSPECT_DEG = 100.0
 
 
 def _thin(points: Sequence[XY], limit: int = MAX_PATH_POINTS) -> tuple[XY, ...]:
@@ -100,6 +103,9 @@ def _odometry_paths(m: Measurement, readings: Sequence[Reading]):
         fixed, excess = odo.correct_heading_drift(segments, turn, t0, t1)
         if excess is None:
             warnings.append("end_heading_unknown")
+            off_deg = abs(turn_deg - round(turn_deg / 360) * 360)
+            if off_deg > GYRO_SUSPECT_DEG:
+                warnings.append("gyro_calibration_suspect")
         else:
             drift_deg = degrees(excess)
             corrected = odo.build_path(fixed)
